@@ -1,0 +1,16 @@
+{
+    "id": "{52D8E128-5588-B496-4BE5-14E8EFD737B8}",
+    "name": "Hoymiles 2T Inverter",
+    "type": 3,
+    "vendor": "Hoymiles",
+    "aliases": [],
+    "parentRequirements": [
+        "{2651EA6C-47E9-BA79-7410-382895EC8244}"
+    ],
+    "childRequirements": [],
+    "implemented": [
+        "{CEE3BF9B-2A23-4433-ACAB-6E22F10D743F}"
+    ],
+    "prefix": "HMS2T",
+    "url": "https://github.com/Nall-chan/Hoymiles2T/"
+}

@@ -1,0 +1,16 @@
+{
+    "id": "{4062635D-2680-4A39-C364-05EB8B196DA9}",
+    "name": "Hoymiles 2T Configurator",
+    "type": 4,
+    "vendor": "Hoymiles",
+    "aliases": [],
+    "parentRequirements": [
+        "{2651EA6C-47E9-BA79-7410-382895EC8244}"
+    ],
+    "childRequirements": [],
+    "implemented": [
+        "{CEE3BF9B-2A23-4433-ACAB-6E22F10D743F}"
+    ],
+    "prefix": "HMS2T",
+    "url": "https://github.com/Nall-chan/Hoymiles2T/"
+}

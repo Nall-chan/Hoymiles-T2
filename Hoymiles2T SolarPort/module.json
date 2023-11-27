@@ -1,0 +1,16 @@
+{
+    "id": "{65B18475-D1B7-825C-5958-5300C1100845}",
+    "name": "Hoymiles 2T SolarPort",
+    "type": 3,
+    "vendor": "Hoymiles",
+    "aliases": [],
+    "parentRequirements": [
+        "{2651EA6C-47E9-BA79-7410-382895EC8244}"
+    ],
+    "childRequirements": [],
+    "implemented": [
+        "{CEE3BF9B-2A23-4433-ACAB-6E22F10D743F}"
+    ],
+    "prefix": "HMS2T",
+    "url": "https://github.com/Nall-chan/Hoymiles2T/"
+}
