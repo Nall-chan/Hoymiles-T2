@@ -39,27 +39,27 @@ class Hoymiles2TDTU extends IPSModuleStrict
         $this->DecodeData(json_decode($data->Data, true));
         return '';
     }
-        private function DecodeData(array $DataValues): void
-        {
-            foreach ($DataValues as $Key => $Value) {
-                if ($Key == \Hoymiles2T\DTU\Variables::SerialNumber) {
-                    $this->SetSummary($Value);
-                }
-                if (!array_key_exists($Key, \Hoymiles2T\DTU\Variables::$Vars)) {
-                    continue;
-                }
-                $Var = \Hoymiles2T\DTU\Variables::$Vars[$Key];
-                if (!$this->FindIDForIdent($Key)) {
-                    $this->MaintainVariable($Key, $this->Translate($Var[0]), $Var[1], $Var[2], 0, true);
-                }
-                switch ($Var[1]) {
-                    case VARIABLETYPE_INTEGER:
-                        $this->SetValueInteger($Key, $Value);
-                        break;
-                    case VARIABLETYPE_FLOAT:
-                        $this->SetValueFloat($Key, $Value * $Var[3]);
-                        break;
-                }
+    private function DecodeData(array $DataValues): void
+    {
+        foreach ($DataValues as $Key => $Value) {
+            if ($Key == \Hoymiles2T\DTU\Variables::SerialNumber) {
+                $this->SetSummary($Value);
+            }
+            if (!array_key_exists($Key, \Hoymiles2T\DTU\Variables::$Vars)) {
+                continue;
+            }
+            $Var = \Hoymiles2T\DTU\Variables::$Vars[$Key];
+            if (!$this->FindIDForIdent($Key)) {
+                $this->MaintainVariable($Key, $this->Translate($Var[0]), $Var[1], $Var[2], 0, true);
+            }
+            switch ($Var[1]) {
+                case VARIABLETYPE_INTEGER:
+                    $this->SetValueInteger($Key, $Value);
+                    break;
+                case VARIABLETYPE_FLOAT:
+                    $this->SetValueFloat($Key, $Value * $Var[3]);
+                    break;
             }
         }
+    }
 }
