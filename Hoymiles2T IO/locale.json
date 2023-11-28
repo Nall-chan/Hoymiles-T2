@@ -1,0 +1,19 @@
+{
+    "translations": {
+        "de": {
+            "Open": "Aktiv",
+            "Host": "Host",
+            "Request Interval": "Abfrageintervall",
+            "seconds": "Sekunden",
+            "Object to control sleep at night": "Objekt welche den Schlafmodus steuert",
+            "Expert settings": "Experteneinstellungen",
+            "Port": "Port",
+            "Request state": "Daten abrufen",
+            "Connected": "Verbunden",
+            "Interface closed": "Verbindung geschlossen",
+            "Configuration invalid": "Konfiguration ungültig",
+            "Connection lost": "Verbindung verloren",
+            "This module is free for non-commercial use,\r\nDonations in support of the author are accepted here:": "Dieses Modul ist für die nicht kommerzielle Nutzung kostenlos,\r\nSchenkungen als Unterstützung für den Autor werden hier akzeptiert:"
+        }
+    }
+}

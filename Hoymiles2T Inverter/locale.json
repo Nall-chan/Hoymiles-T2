@@ -1,0 +1,15 @@
+{
+    "translations": {
+        "de": {
+            "Number": "Nummer",
+            "Voltage": "Spannung",
+            "Frequenz": "Frequenz",
+            "Power": "Leistung",
+            "Current": "Strom",
+            "Power factor": "Leistungsfaktor",
+            "Temperature": "Temperatur",
+            "Link": "Link",
+            "This module is free for non-commercial use,\r\nDonations in support of the author are accepted here:": "Dieses Modul ist für die nicht kommerzielle Nutzung kostenlos,\r\nSchenkungen als Unterstützung für den Autor werden hier akzeptiert:"
+        }
+    }
+}

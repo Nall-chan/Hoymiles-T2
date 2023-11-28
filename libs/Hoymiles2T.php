@@ -10,8 +10,11 @@ namespace Hoymiles2T{
         public const DTU = '{BB414362-B36F-81C5-2701-E968A29F58AD}';
         public const Inverter = '{52D8E128-5588-B496-4BE5-14E8EFD737B8}';
         public const SolarPort = '{65B18475-D1B7-825C-5958-5300C1100845}';
-        public const IoToDevices = '{CEE3BF9B-2A23-4433-ACAB-6E22F10D743F}';
-        public const DevicesToIo = '{2651EA6C-47E9-BA79-7410-382895EC8244}';
+        public const IoToDTU = '{8EFD9E53-0198-9BA0-1B24-EB2E88D754EB}';
+        public const IoToInverter = '{442F969D-D3B8-B949-EC0E-4B7BCC3C7853}';
+        public const IoToSolarPort = '{85CA6AAE-6EE0-BE1F-FA4D-F0A3B569E3F7}';
+        //public const IoToConfigurator = '{CEE3BF9B-2A23-4433-ACAB-6E22F10D743F}';
+        public const ConfiguratorToIo = '{2651EA6C-47E9-BA79-7410-382895EC8244}';
     }
 }
 
@@ -53,12 +56,64 @@ namespace Hoymiles2T\Inverter{
     {
         public const Number = 'Number';
     }
+    class Variables
+    {
+        public const Voltage = 'v'; // 0.1 V
+        public const Frequenz = 'freq'; // 0.01 Hz
+        public const Power = 'p'; // 0.1 W
+        public const Current = 'i'; // 0.01 A
+        public const PowerFactor = 'pf'; // 0.1 Pf
+        public const Temp = 'temp'; // 0.1 °C
+        public const Link = 'link'; // bool ?
+        public static $Vars = [
+            self::Voltage     => ['Voltage', VARIABLETYPE_FLOAT, '~Volt.230', 0.1],
+            self::Frequenz    => ['Frequenz', VARIABLETYPE_FLOAT, '~Hertz.50', 0.01],
+            self::Power       => ['Power', VARIABLETYPE_FLOAT, '~Watt', 0.1],
+            self::Current     => ['Current', VARIABLETYPE_FLOAT, '~Ampere', 0.01],
+            self::PowerFactor => ['Power factor', VARIABLETYPE_FLOAT, '~Valve.F', 0.1],
+            self::Temp        => ['Temperature', VARIABLETYPE_FLOAT, '~Temperature', 0.1],
+            self::Link        => ['Link', VARIABLETYPE_BOOLEAN, '~Alert.Reversed'],
+        ];
+    }
 }
 
 namespace Hoymiles2T\SolarPort{
     class Property
     {
         public const Port = 'Port';
+    }
+
+    class Variables
+    {
+        public const Voltage = 'v'; // 0.1 V
+        public const Current = 'i'; // 0.01 A
+        public const Power = 'p'; // 0.1 W
+        public const EnergyTotal = 'et'; // Wh
+        public const EnergyDaily = 'ed'; // Wh
+
+        public static $Vars = [
+            self::Voltage            => ['Voltage', VARIABLETYPE_FLOAT, '~Volt.230', 0.1],
+            self::Current            => ['Current', VARIABLETYPE_FLOAT, '~Ampere', 0.01],
+            self::Power              => ['Power', VARIABLETYPE_FLOAT, '~Watt', 0.1],
+            self::EnergyTotal        => ['Energy total', VARIABLETYPE_FLOAT, '~Electricity.Wh', 1],
+            self::EnergyDaily        => ['Energy daily', VARIABLETYPE_FLOAT, '~Electricity.Wh', 1],
+        ];
+    }
+}
+
+namespace Hoymiles2T\DTU{
+    class Variables
+    {
+        public const SerialNumber = 'sn';
+        public const Time = 'time'; // 0.01 A
+        public const CurrentPower = 'pvCurrentPower'; // W 0.1
+        public const DailyYield = 'pvDailyYield'; // Wh
+
+        public static $Vars = [
+            self::Time         => ['Time', VARIABLETYPE_INTEGER, '~UnixTimestamp'],
+            self::CurrentPower => ['Power', VARIABLETYPE_FLOAT, '~Watt', 0.1],
+            self::DailyYield   => ['Energy daily', VARIABLETYPE_FLOAT, '~Electricity.Wh', 1],
+        ];
     }
 }
 

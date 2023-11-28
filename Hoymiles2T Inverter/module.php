@@ -8,8 +8,7 @@ eval('declare(strict_types=1);namespace Hoymiles2TInverter {?>' . file_get_conte
 eval('declare(strict_types=1);namespace Hoymiles2TInverter {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/VariableHelper.php') . '}');
 
 /**
- * @method void RegisterProfileInteger(string $Name, string $Icon, string $Prefix, string $Suffix, int $MinValue, int $MaxValue, int $StepSize)
- * @method void SetValueInteger(string $Ident, int $value)
+ * @method void SetValueBoolean(string $Ident, bool $value)
  * @method void SetValueFloat(string $Ident, float $value)
  */
 class Hoymiles2TInverter extends IPSModuleStrict
@@ -34,59 +33,47 @@ class Hoymiles2TInverter extends IPSModuleStrict
 
     public function ApplyChanges(): void
     {
-        //Never delete this line!
-        parent::ApplyChanges();
-        /*
-        $this->RegisterProfileInteger('SIRO.Tilt', 'TurnLeft', '', '%', 0, 180, 1);
-        $this->RegisterVariableInteger('CONTROL', $this->Translate('Control'), '~ShutterMoveStop', 1);
-        $this->EnableAction('CONTROL');
-        $this->RegisterVariableInteger('LEVEL', $this->Translate('Level'), '~Shutter', 2);
-        $this->EnableAction('LEVEL');
-        $this->RegisterVariableInteger('TILT', $this->Translate('Tilt'), 'SIRO.Tilt', 3);
-        $this->EnableAction('TILT');
-        $this->RegisterVariableFloat('POWER', $this->Translate('Voltage'), '~Volt', 4);
-         */
         $Address = $this->ReadPropertyInteger(\Hoymiles2T\Inverter\Property::Number);
         $this->SetSummary('Number: ' . (string) $Address);
-
-        $this->SetStatus(IS_ACTIVE);
 
         if ($Address < 1) {
             $this->SetReceiveDataFilter('.*NOTING.*');
             return;
         }
-        $Filter = '.*"INVERTER":' . $Address . ',.*';
+        $Filter = '.*\\\\"ver\\\\"\:' . $Address . ',.*';
         $this->SetReceiveDataFilter($Filter);
         $this->SendDebug('Filter', $Filter, 0);
+
+        //Never delete this line!
+        parent::ApplyChanges();
     }
 
-    /*
     public function ReceiveData(string $JSONString): string
     {
-        $Data = json_decode($JSONString);
-        $DeviceFrame = new \SIRO\DeviceFrame(
-            $Data->DeviceCommand,
-            $Data->DeviceAddress,
-            $Data->Data
-        );
-        $this->SendDebug('Event', $DeviceFrame, 0);
-        $this->DecodeEvent($DeviceFrame);
+        $data = json_decode($JSONString);
+        $this->SendDebug('Receive', $data->Data, 0);
+        $this->DecodeData(json_decode($data->Data, true));
         return '';
     }
 
-
-    private function DecodeEvent(\SIRO\DeviceFrame $DeviceFrame): void
+    private function DecodeData(array $DataValues): void
     {
-        switch ($DeviceFrame->Command) {
-            case \SIRO\DeviceCommand::REPORT_STATE:
-                $Part = explode('b', $DeviceFrame->Data);
-                $Level = (int) $Part[0];
-                $Tilt = (int) $Part[1];
-                $this->SetValueInteger('LEVEL', $Level);
-                $this->SetValueInteger('TILT', $Tilt);
-                $this->RequestPowerState();
-                break;
+        foreach ($DataValues as $Key => $Value) {
+            if (!array_key_exists($Key, \Hoymiles2T\Inverter\Variables::$Vars)) {
+                continue;
+            }
+            $Var = \Hoymiles2T\Inverter\Variables::$Vars[$Key];
+            if (!$this->FindIDForIdent($Key)) {
+                $this->MaintainVariable($Key, $this->Translate($Var[0]), $Var[1], $Var[2], 0, true);
+            }
+            switch ($Var[1]) {
+                case VARIABLETYPE_FLOAT:
+                    $this->SetValueFloat($Key, $Value * $Var[3]);
+                    break;
+                case VARIABLETYPE_BOOLEAN:
+                    $this->SetValueBoolean($Key, (bool) $Value);
+                    break;
+            }
         }
     }
-     */
 }

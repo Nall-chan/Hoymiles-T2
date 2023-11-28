@@ -6,7 +6,9 @@
     "aliases": [],
     "parentRequirements": [],
     "childRequirements": [
-        "{CEE3BF9B-2A23-4433-ACAB-6E22F10D743F}"
+        "{8EFD9E53-0198-9BA0-1B24-EB2E88D754EB}",
+        "{442F969D-D3B8-B949-EC0E-4B7BCC3C7853}",
+        "{85CA6AAE-6EE0-BE1F-FA4D-F0A3B569E3F7}"
     ],
     "implemented": [
         "{2651EA6C-47E9-BA79-7410-382895EC8244}"

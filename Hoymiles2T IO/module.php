@@ -80,8 +80,11 @@ class Hoymiles2TIO extends IPSModuleStrict
             $this->RegisterMessage(0, IPS_KERNELSTARTED);
             return;
         }
-
-        $this->StartWithLocationCheck();
+        if ($this->ReadPropertyBoolean(\Hoymiles2T\IO\Property::Active)) {
+            $this->StartWithLocationCheck();
+        } else {
+            $this->SetStatus(IS_INACTIVE);
+        }
     }
     /**
      * Nachrichten aus der Nachrichtenschlange verarbeiten.
@@ -130,9 +133,13 @@ class Hoymiles2TIO extends IPSModuleStrict
         return json_encode($Form);
     }
 
-    public function RequestState()
+    public function RequestState(): bool
     {
-        $this->RealDataResDTO();
+        if ($this->GetStatus() != IS_ACTIVE) {
+            trigger_error($this->Translate('Instance is not active.'), E_USER_NOTICE);
+            return false;
+        }
+        return $this->RealDataResDTO();
     }
     /**
      * Wird ausgeführt wenn der Kernel hochgefahren wurde.
@@ -162,7 +169,7 @@ class Hoymiles2TIO extends IPSModuleStrict
         //todo
         $this->SetStatus(IS_ACTIVE);
     }
-    private function RealDataResDTO(): false|string
+    private function RealDataResDTO(): bool
     {
         /*
             $Request = new \Hoymiles\RealDataResDTO();
@@ -175,7 +182,49 @@ class Hoymiles2TIO extends IPSModuleStrict
         $ResultStream = hex2bin('0a0c34313433393233373332343610f1a68cab06180128014a2308c6e4dc91a98205100118d41120892728b706382440e707482950036001a001f980085a1d08c6e4dc91a98205100118c502208b0128c40330e2133829408080a4185a1d08c6e4dc91a98205100218c40220800128a10330a4153826408080801860b706684f');
         $Result = new \Hoymiles\RealDataReqDTO();
         $Result->mergeFromString($ResultStream);
-        return $Result->serializeToJsonString();
+
+        $DTU = json_encode([
+            'sn'            => $Result->getSn(),
+            'time'          => $Result->getTime(),
+            'pvCurrentPower'=> $Result->getPvCurrentPower(),
+            'pvDailyYield'  => $Result->getPvDailyYield()
+        ]);
+        $this->SendDebug('DTU', $DTU, 0);
+        $this->SendDataToChildren(
+            json_encode(
+                [
+                    'DataID'     => \Hoymiles2T\GUID::IoToDTU,
+                    'Data'       => $DTU
+                ]
+            )
+        );
+        /** @var \Hoymiles\InverterState[] $Inverters */
+        $Inverters = $Result->getInverterState();
+        /** @var \Hoymiles\PortState[] $SolarPorts */
+        $SolarPorts = $Result->getPortState();
+        foreach ($Inverters as $Inverter) {
+            $this->SendDebug('Inverter:' . $Inverter->getVer(), $Inverter->serializeToJsonString(), 0);
+            $this->SendDataToChildren(
+                json_encode(
+                    [
+                        'DataID'     => \Hoymiles2T\GUID::IoToInverter,
+                        'Data'       => $Inverter->serializeToJsonString()
+                    ]
+                )
+            );
+        }
+        foreach ($SolarPorts as $SolarPort) {
+            $this->SendDebug('Solar:' . $SolarPort->getPi(), $SolarPort->serializeToJsonString(), 0);
+            $this->SendDataToChildren(
+                json_encode(
+                    [
+                        'DataID'     => \Hoymiles2T\GUID::IoToSolarPort,
+                        'Data'       => $SolarPort->serializeToJsonString()
+                    ]
+                )
+            );
+        }
+        return true;
     }
 
     private function SendCommand(int $Command, string $RequestBytes): false|string
