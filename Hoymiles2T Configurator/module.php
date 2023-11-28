@@ -37,7 +37,7 @@ class Hoymiles2TConfigurator extends IPSModuleStrict
         if ($this->GetStatus() == IS_CREATING) {
             return json_encode($Form);
         }
-        if (!$this->HasActiveParent()) {
+        if (!$this->HasActiveParent() || (@IPS_GetInstance($this->InstanceID)['ConnectionID'] < 10000)) {
             $Form['actions'][1]['visible'] = true;
             $Form['actions'][1]['popup']['items'][0]['caption'] = 'Instance has no active parent.';
             //$Form['actions'][1]['items'][0]['visible'] = false;
@@ -55,6 +55,9 @@ class Hoymiles2TConfigurator extends IPSModuleStrict
     }
     private function GetDevicesFromDTU(): array
     {
+        if (!$this->HasActiveParent() || (@IPS_GetInstance($this->InstanceID)['ConnectionID'] < 10000)) {
+            return [0, 0];
+        }
         $ret = $this->SendDataToParent(json_encode([
             'DataID'   => \Hoymiles2T\GUID::ConfiguratorToIo,
             'Function' => 'ListDevices',

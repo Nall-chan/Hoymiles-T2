@@ -53,15 +53,20 @@ class Hoymiles2TIO extends IPSModuleStrict
     public function Create(): void
     {
         parent::Create();
+
         $this->Sequenz = 0;
         $this->NbrOfInverter = 0;
         $this->NbrOfSolarPort = 0;
+
         $this->RegisterPropertyBoolean(\Hoymiles2T\IO\Property::Active, false);
         $this->RegisterPropertyString(\Hoymiles2T\IO\Property::Host, '');
         $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::Port, 10081);
         $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::RequestInterval, 10);
-        $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::NightObject, 1);
-        $this->RegisterPropertyBoolean(\Hoymiles2T\IO\Property::NightInverted, false);
+        $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::LocationId, 1);
+        $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::StartVariableId, 1);
+        $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::StopVariableId, 1);
+        $this->RegisterPropertyString(\Hoymiles2T\IO\Property::DayValue, '""');
+        $this->RegisterPropertyString(\Hoymiles2T\IO\Property::NightValue, '""');
 
         $this->RegisterTimer(\Hoymiles2T\IO\Timer::RequestState, 0, 'IPS_RequestAction(' . $this->InstanceID . ',"' . \Hoymiles2T\IO\Timer::RequestState . '",true);');
         $this->RegisterTimer(\Hoymiles2T\IO\Timer::Reconnect, 0, 'IPS_RequestAction(' . $this->InstanceID . ',"' . \Hoymiles2T\IO\Timer::Reconnect . '",true);');
@@ -84,7 +89,7 @@ class Hoymiles2TIO extends IPSModuleStrict
             return;
         }
         if ($this->ReadPropertyBoolean(\Hoymiles2T\IO\Property::Active)) {
-            $this->StartWithLocationCheck();
+            $this->StartWithDayNightCheck();
         } else {
             $this->SetStatus(IS_INACTIVE);
         }
@@ -118,8 +123,12 @@ class Hoymiles2TIO extends IPSModuleStrict
             case \Hoymiles2T\IO\Timer::Reconnect:
                 $this->ApplyChanges();
                 return;
-            case \Hoymiles2T\IO\Property::NightObject:
+            case \Hoymiles2T\IO\Property::LocationId:
                 $this->UpdateNightObjectForm($Value);
+                return;
+            case \Hoymiles2T\IO\Property::DayValue:
+            case \Hoymiles2T\IO\Property::NightValue:
+                $this->UpdateDayNightVariables($Value, $Ident);
                 return;
         }
     }
@@ -131,6 +140,49 @@ class Hoymiles2TIO extends IPSModuleStrict
             return json_encode($Form);
         }
 
+        $StartVariableId = $this->ReadPropertyInteger(\Hoymiles2T\IO\Property::StartVariableId);
+        if ($StartVariableId < 10000) {
+            $StartVariableId = false;
+        } else {
+            if (IPS_VariableExists($StartVariableId)) {
+                if (IPS_GetVariable($StartVariableId)['VariableProfile'] == '~UnixTimestamp') {
+                    $StartVariableId = false;
+                }
+            } else {
+                $StartVariableId = false;
+            }
+        }
+        if ($StartVariableId) {
+            $Form['elements'][3]['items'][1]['variableID'] = $StartVariableId;
+            $Form['elements'][3]['items'][1]['value'] = json_decode($this->ReadPropertyString(\Hoymiles2T\IO\Property::DayValue), true);
+        } else {
+            $Form['elements'][3]['items'][1]['variableID'] = -1;
+            $Form['elements'][3]['items'][1]['value'] = '""';
+            $Form['elements'][3]['items'][1]['visible'] = false;
+        }
+
+        $StopVariableId = $this->ReadPropertyInteger(\Hoymiles2T\IO\Property::StopVariableId);
+
+        if ($StopVariableId < 10000) {
+            $StopVariableId = false;
+        } else {
+            if (IPS_VariableExists($StopVariableId)) {
+                if (IPS_GetVariable($StopVariableId)['VariableProfile'] == '~UnixTimestamp') {
+                    $StopVariableId = false;
+                }
+            } else {
+                $StopVariableId = false;
+            }
+        }
+
+        if ($StopVariableId) {
+            $Form['elements'][4]['items'][1]['variableID'] = $StopVariableId;
+            $Form['elements'][4]['items'][1]['value'] = json_decode($this->ReadPropertyString(\Hoymiles2T\IO\Property::NightValue), true);
+        } else {
+            $Form['elements'][4]['items'][1]['variableID'] = -1;
+            $Form['elements'][4]['items'][1]['value'] = '""';
+            $Form['elements'][4]['items'][1]['visible'] = false;
+        }
         $this->SendDebug('FORM', json_encode($Form), 0);
         $this->SendDebug('FORM', json_last_error_msg(), 0);
         return json_encode($Form);
@@ -173,11 +225,64 @@ class Hoymiles2TIO extends IPSModuleStrict
         parent::SetStatus($NewState);
         return true;
     }
-    private function UpdateNightObjectForm(int $NightObject)
+
+    private function UpdateDayNightVariables(int $VariableId, string $Property): void
     {
-        //todo
+        if ($VariableId < 10000) {
+            $this->UpdateFormField($Property, 'variableID', -1);
+            $this->UpdateFormField($Property, 'visible', false);
+            $this->UpdateFormField($Property, 'value', '""');
+            return;
+        }
+        if (!IPS_VariableExists($VariableId)) {
+            $this->UpdateFormField($Property, 'variableID', -1);
+            $this->UpdateFormField($Property, 'visible', false);
+            $this->UpdateFormField($Property, 'value', '""');
+            return;
+        }
+        switch (IPS_GetVariable($VariableId)['VariableType']) {
+            case VARIABLETYPE_BOOLEAN:
+                $this->UpdateFormField($Property, 'variableID', $VariableId);
+                $this->UpdateFormField($Property, 'visible', true);
+                break;
+            case VARIABLETYPE_INTEGER:
+                if (IPS_GetVariable($VariableId)['VariableProfile'] == '~UnixTimestamp') {
+                    $this->UpdateFormField($Property, 'variableID', -1);
+                    $this->UpdateFormField($Property, 'visible', false);
+                    $this->UpdateFormField($Property, 'value', '""');
+                } else {
+                    $this->UpdateFormField($Property, 'variableID', $VariableId);
+                    $this->UpdateFormField($Property, 'visible', true);
+                }
+                break;
+            default:
+                $this->UpdateFormField($Property, 'visible', false);
+                $this->UpdateFormField($Property, 'variableID', -1);
+                $this->UpdateFormField($Property, 'value', '""');
+                break;
+        }
     }
-    private function StartWithLocationCheck()
+    private function UpdateNightObjectForm(int $LocationId): void
+    {
+        if ($LocationId < 10000) {
+            $this->UpdateFormField('StartVariableId', 'value', 0);
+            $this->UpdateFormField('StopVariableId', 'value', 0);
+            return;
+        }
+        if (!IPS_InstanceExists($LocationId)) {
+            $this->UpdateFormField('StartVariableId', 'value', 0);
+            $this->UpdateFormField('StopVariableId', 'value', 0);
+            return;
+        }
+        if (IPS_GetInstance($LocationId)['ModuleInfo']['ModuleID'] != \Hoymiles2T\GUID::LocationControl) {
+            $this->UpdateFormField('StartVariableId', 'value', 0);
+            $this->UpdateFormField('StopVariableId', 'value', 0);
+            return;
+        }
+        $this->UpdateFormField('StartVariableId', 'value', IPS_GetObjectIDByIdent('Sunrise', $LocationId));
+        $this->UpdateFormField('StopVariableId', 'value', IPS_GetObjectIDByIdent('Sunset', $LocationId));
+    }
+    private function StartWithDayNightCheck()
     {
         //todo
         $this->SetStatus(IS_ACTIVE);
@@ -185,13 +290,13 @@ class Hoymiles2TIO extends IPSModuleStrict
     private function RealDataResDTO(): bool
     {
         $Request = new \Hoymiles\RealDataResDTO();
+        //todo set time ?
         $RequestBytes = $Request->serializeToString();
         $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::RealDataResDTO, $RequestBytes);
         if (!$ResultStream) {
             return false;
         }
 
-        //$ResultStream = hex2bin('0a0c34313433393233373332343610f1a68cab06180128014a2308c6e4dc91a98205100118d41120892728b706382440e707482950036001a001f980085a1d08c6e4dc91a98205100118c502208b0128c40330e2133829408080a4185a1d08c6e4dc91a98205100218c40220800128a10330a4153826408080801860b706684f');
         $Result = new \Hoymiles\RealDataReqDTO();
         $Result->mergeFromString($ResultStream);
 

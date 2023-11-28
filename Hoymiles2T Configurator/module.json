@@ -8,7 +8,9 @@
         "{2651EA6C-47E9-BA79-7410-382895EC8244}"
     ],
     "childRequirements": [],
-    "implemented": [],
+    "implemented": [
+        "{CEE3BF9B-2A23-4433-ACAB-6E22F10D743F}"
+    ],
     "prefix": "HMS2T",
     "url": "https://github.com/Nall-chan/Hoymiles2T/"
 }

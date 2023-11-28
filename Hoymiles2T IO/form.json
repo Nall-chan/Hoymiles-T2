@@ -27,15 +27,58 @@
             "width": "200px"
         },
         {
+            "type": "SelectInstance",
+            "name": "LocationId",
+            "validModules": [
+                "{45E97A63-F870-408A-B259-2933F7EABF74}"
+            ],
+            "caption": "Location Control for sleep at night",
+            "width": "300px",
+            "onChange": "IPS_RequestAction($id,'LocationId',$LocationId);"
+        },
+        {
             "type": "RowLayout",
-            "name": "NightControl",
+            "name": "StartNightControl",
             "items": [
                 {
-                    "type": "SelectObject",
-                    "name": "NightObject",
-                    "caption": "Object to control sleep at night",
-                    "width": "500px",
-                    "onChange": "IPS_RequestAction($id,'NightObject',$NightObject);"
+                    "type": "SelectVariable",
+                    "validVariableTypes": [
+                        0,
+                        1
+                    ],
+                    "name": "StartVariableId",
+                    "caption": "Variable for sleep ending (Timestamp or boolean)",
+                    "width": "300px",
+                    "onChange": "IPS_RequestAction($id,'DayValue',$StartVariableId);"
+                },
+                {
+                    "type": "SelectValue",
+                    "name": "DayValue",
+                    "caption": "Value for is day",
+                    "variableID": 1
+                }
+            ]
+        },
+        {
+            "type": "RowLayout",
+            "name": "StopNightControl",
+            "items": [
+                {
+                    "type": "SelectVariable",
+                    "validVariableTypes": [
+                        0,
+                        1
+                    ],
+                    "name": "StopVariableId",
+                    "caption": "Variable for sleep start (Timestamp or boolean)",
+                    "width": "300px",
+                    "onChange": "IPS_RequestAction($id,'NightValue',$StopVariableId);"
+                },
+                {
+                    "type": "SelectValue",
+                    "name": "NightValue",
+                    "caption": "Value for is night",
+                    "variableID": 1
                 }
             ]
         },

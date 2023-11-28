@@ -13,8 +13,9 @@ namespace Hoymiles2T{
         public const IoToDTU = '{8EFD9E53-0198-9BA0-1B24-EB2E88D754EB}';
         public const IoToInverter = '{442F969D-D3B8-B949-EC0E-4B7BCC3C7853}';
         public const IoToSolarPort = '{85CA6AAE-6EE0-BE1F-FA4D-F0A3B569E3F7}';
-        //public const IoToConfigurator = '{CEE3BF9B-2A23-4433-ACAB-6E22F10D743F}';
+        public const IoToConfigurator = '{CEE3BF9B-2A23-4433-ACAB-6E22F10D743F}';
         public const ConfiguratorToIo = '{2651EA6C-47E9-BA79-7410-382895EC8244}';
+        public const LocationControl = '{45E97A63-F870-408A-B259-2933F7EABF74}';
     }
     class ConfigArray
     {
@@ -30,8 +31,11 @@ namespace Hoymiles2T\IO{
         public const Host = 'Host';
         public const Port = 'Port';
         public const RequestInterval = 'RequestInterval';
-        public const NightObject = 'NightObject';
-        public const NightInverted = 'NightInverted';
+        public const LocationId = 'LocationId';
+        public const StartVariableId = 'StartVariableId';
+        public const StopVariableId = 'StopVariableId';
+        public const DayValue = 'DayValue';
+        public const NightValue = 'NightValue';
     }
 
     class Timer
