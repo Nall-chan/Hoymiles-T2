@@ -37,10 +37,12 @@ eval('declare(strict_types=1);namespace HoymilesIO {?>' . file_get_contents(dirn
 
 /**
  * @property int $Sequenz
+ * @property int $NbrOfInverter
+ * @property int $NbrOfSolarPort
  *
  * @method bool lock(string $ident)
  * @method void unlock(string $ident)
- *
+ * @method bool SendDebug(string $Message, mixed $Data, int $Format)
  */
 class Hoymiles2TIO extends IPSModuleStrict
 {
@@ -52,7 +54,8 @@ class Hoymiles2TIO extends IPSModuleStrict
     {
         parent::Create();
         $this->Sequenz = 0;
-
+        $this->NbrOfInverter = 0;
+        $this->NbrOfSolarPort = 0;
         $this->RegisterPropertyBoolean(\Hoymiles2T\IO\Property::Active, false);
         $this->RegisterPropertyString(\Hoymiles2T\IO\Property::Host, '');
         $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::Port, 10081);
@@ -141,6 +144,16 @@ class Hoymiles2TIO extends IPSModuleStrict
         }
         return $this->RealDataResDTO();
     }
+    public function ForwardData($JSONString): string
+    {
+        return serialize(
+            [
+                \Hoymiles2T\ConfigArray::NbrOfInverter  => $this->NbrOfInverter,
+                \Hoymiles2T\ConfigArray::NbrOfSolarPort => $this->NbrOfSolarPort
+            ]
+        );
+    }
+
     /**
      * Wird ausgeführt wenn der Kernel hochgefahren wurde.
      */
@@ -171,15 +184,14 @@ class Hoymiles2TIO extends IPSModuleStrict
     }
     private function RealDataResDTO(): bool
     {
-        /*
-            $Request = new \Hoymiles\RealDataResDTO();
-            $RequestBytes = $Request->serializeToString();
-            $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::RealDataResDTO, $RequestBytes);
-            if (!$ResultStream) {
-                return false;
-            }
-         */
-        $ResultStream = hex2bin('0a0c34313433393233373332343610f1a68cab06180128014a2308c6e4dc91a98205100118d41120892728b706382440e707482950036001a001f980085a1d08c6e4dc91a98205100118c502208b0128c40330e2133829408080a4185a1d08c6e4dc91a98205100218c40220800128a10330a4153826408080801860b706684f');
+        $Request = new \Hoymiles\RealDataResDTO();
+        $RequestBytes = $Request->serializeToString();
+        $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::RealDataResDTO, $RequestBytes);
+        if (!$ResultStream) {
+            return false;
+        }
+
+        //$ResultStream = hex2bin('0a0c34313433393233373332343610f1a68cab06180128014a2308c6e4dc91a98205100118d41120892728b706382440e707482950036001a001f980085a1d08c6e4dc91a98205100118c502208b0128c40330e2133829408080a4185a1d08c6e4dc91a98205100218c40220800128a10330a4153826408080801860b706684f');
         $Result = new \Hoymiles\RealDataReqDTO();
         $Result->mergeFromString($ResultStream);
 
@@ -202,6 +214,10 @@ class Hoymiles2TIO extends IPSModuleStrict
         $Inverters = $Result->getInverterState();
         /** @var \Hoymiles\PortState[] $SolarPorts */
         $SolarPorts = $Result->getPortState();
+
+        $this->NbrOfInverter = count($Inverters);
+        $this->NbrOfSolarPort = count($SolarPorts);
+
         foreach ($Inverters as $Inverter) {
             $this->SendDebug('Inverter:' . $Inverter->getVer(), $Inverter->serializeToJsonString(), 0);
             $this->SendDataToChildren(
@@ -229,12 +245,13 @@ class Hoymiles2TIO extends IPSModuleStrict
 
     private function SendCommand(int $Command, string $RequestBytes): false|string
     {
+        $this->SendDebug('SendCommand', $Command, 0);
         $CRC16 = $this->CRC16($RequestBytes);
         $Len = strlen($RequestBytes) + 10;
         $this->lock(\Hoymiles2T\IO\Locks::SendSequenz);
         $Content = \Hoymiles\DTU\SendStream::Header . pack('n', $Command) . pack('n', ++$this->Sequenz) . $RequestBytes . $CRC16 . pack('n', $Len);
         $this->unlock(\Hoymiles2T\IO\Locks::SendSequenz);
-        $DeviceAddress = 'tcp://' . $this->ReadPropertyString(\Hoymiles2T\IO\Property::Host . ':' . $this->ReadPropertyInteger(\Hoymiles2T\IO\Property::Port));
+        $DeviceAddress = 'tcp://' . $this->ReadPropertyString(\Hoymiles2T\IO\Property::Host) . ':' . $this->ReadPropertyInteger(\Hoymiles2T\IO\Property::Port);
         $errno = 0;
         $errstr = '';
         $fp = @stream_socket_client($DeviceAddress, $errno, $errstr, 5);
@@ -243,6 +260,7 @@ class Hoymiles2TIO extends IPSModuleStrict
             // todo trigger_error
             return false;
         } else {
+            $this->SendDebug('Send', $Content, 0);
             for ($fwrite = 0, $written = 0, $max = strlen($Content); $written < $max; $written += $fwrite) {
                 $fwrite = @fwrite($fp, substr($Content, $written));
                 if ($fwrite === false) {
@@ -253,9 +271,7 @@ class Hoymiles2TIO extends IPSModuleStrict
                 }
             }
             $Data = '';
-            while (!feof($fp)) {
-                $Data .= fread($fp, 8192);
-            }
+            $Data = fread($fp, 8192);
             fclose($fp);
         }
         $Header = substr($Data, 0, 10);

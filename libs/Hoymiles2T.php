@@ -16,6 +16,11 @@ namespace Hoymiles2T{
         //public const IoToConfigurator = '{CEE3BF9B-2A23-4433-ACAB-6E22F10D743F}';
         public const ConfiguratorToIo = '{2651EA6C-47E9-BA79-7410-382895EC8244}';
     }
+    class ConfigArray
+    {
+        public const NbrOfInverter = 'NbrOfInverter';
+        public const NbrOfSolarPort = 'NbrOfSolarPort';
+    }
 }
 
 namespace Hoymiles2T\IO{

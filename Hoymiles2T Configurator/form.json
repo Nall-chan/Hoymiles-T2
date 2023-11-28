@@ -11,18 +11,18 @@
             },
             "columns": [
                 {
-                    "caption": "Serial number",
-                    "name": "SerialNumber",
-                    "width": "120px"
-                },
-                {
                     "caption": "Type",
                     "name": "Type",
                     "width": "120px"
                 },
                 {
+                    "caption": "Index",
+                    "name": "Index",
+                    "width": "50px"
+                },
+                {
                     "caption": "Name",
-                    "name": "Name",
+                    "name": "name",
                     "width": "300px"
                 },
                 {
@@ -32,6 +32,25 @@
                 }
             ],
             "values": []
+        },
+        {
+            "name": "ErrorPopup",
+            "type": "PopupAlert",
+            "visible": false,
+            "popup": {
+                "items": [
+                    {
+                        "name": "ErrorTitle",
+                        "type": "Label",
+                        "caption": ""
+                    },
+                    {
+                        "name": "ErrorText",
+                        "type": "Label",
+                        "caption": ""
+                    }
+                ]
+            }
         },
         {
             "type": "Label",
