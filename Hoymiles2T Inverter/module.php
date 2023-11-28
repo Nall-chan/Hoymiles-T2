@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/libs/Hoymiles2T.php';  // diverse Klassen
-eval('declare(strict_types=1);namespace Hoymiles2TInverter {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/DebugHelper.php') . '}');
-eval('declare(strict_types=1);namespace Hoymiles2TInverter {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/VariableProfileHelper.php') . '}');
 eval('declare(strict_types=1);namespace Hoymiles2TInverter {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/VariableHelper.php') . '}');
 
 /**
@@ -13,8 +11,6 @@ eval('declare(strict_types=1);namespace Hoymiles2TInverter {?>' . file_get_conte
  */
 class Hoymiles2TInverter extends IPSModuleStrict
 {
-    use \Hoymiles2TInverter\DebugHelper;
-    use \Hoymiles2TInverter\VariableProfileHelper;
     use \Hoymiles2TInverter\VariableHelper;
 
     public function Create(): void
@@ -42,7 +38,6 @@ class Hoymiles2TInverter extends IPSModuleStrict
         }
         $Filter = '.*\\\\"ver\\\\"\:' . $Address . ',.*';
         $this->SetReceiveDataFilter($Filter);
-        $this->SendDebug('Filter', $Filter, 0);
 
         //Never delete this line!
         parent::ApplyChanges();

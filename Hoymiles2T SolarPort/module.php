@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/libs/Hoymiles2T.php';  // diverse Klassen
-eval('declare(strict_types=1);namespace Hoymiles2TSolarPort {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/DebugHelper.php') . '}');
-eval('declare(strict_types=1);namespace Hoymiles2TSolarPort {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/VariableProfileHelper.php') . '}');
 eval('declare(strict_types=1);namespace Hoymiles2TSolarPort {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/VariableHelper.php') . '}');
 
 /**
@@ -12,8 +10,6 @@ eval('declare(strict_types=1);namespace Hoymiles2TSolarPort {?>' . file_get_cont
  */
 class Hoymiles2TSolarPort extends IPSModuleStrict
 {
-    use \Hoymiles2TSolarPort\DebugHelper;
-    use \Hoymiles2TSolarPort\VariableProfileHelper;
     use \Hoymiles2TSolarPort\VariableHelper;
 
     public function Create(): void
@@ -41,7 +37,6 @@ class Hoymiles2TSolarPort extends IPSModuleStrict
         }
         $Filter = '.*\\\\"pi\\\\"\:' . $Address . ',.*';
         $this->SetReceiveDataFilter($Filter);
-        $this->SendDebug('Filter', $Filter, 0);
 
         //Never delete this line!
         parent::ApplyChanges();

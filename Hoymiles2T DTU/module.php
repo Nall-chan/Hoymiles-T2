@@ -3,19 +3,14 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/libs/Hoymiles2T.php';  // diverse Klassen
-eval('declare(strict_types=1);namespace Hoymiles2TDTU {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/DebugHelper.php') . '}');
-eval('declare(strict_types=1);namespace Hoymiles2TDTU {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/VariableProfileHelper.php') . '}');
 eval('declare(strict_types=1);namespace Hoymiles2TDTU {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/VariableHelper.php') . '}');
 
 /**
- * @method void RegisterProfileInteger(string $Name, string $Icon, string $Prefix, string $Suffix, int $MinValue, int $MaxValue, int $StepSize)
  * @method void SetValueInteger(string $Ident, int $value)
  * @method void SetValueFloat(string $Ident, float $value)
  */
 class Hoymiles2TDTU extends IPSModuleStrict
 {
-    use \Hoymiles2TDTU\DebugHelper;
-    use \Hoymiles2TDTU\VariableProfileHelper;
     use \Hoymiles2TDTU\VariableHelper;
 
     public function Create(): void
