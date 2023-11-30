@@ -122,7 +122,7 @@ class Hoymiles2TIO extends IPSModuleStrict
         $this->SetStatus(IS_INACTIVE);
         return true;
     }
-    
+
     /**
      * Nachrichten aus der Nachrichtenschlange verarbeiten.
      *
