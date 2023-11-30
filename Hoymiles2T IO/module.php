@@ -67,9 +67,8 @@ class Hoymiles2TIO extends IPSModuleStrict
         $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::StopVariableId, 1);
         $this->RegisterPropertyString(\Hoymiles2T\IO\Property::DayValue, '""');
         $this->RegisterPropertyString(\Hoymiles2T\IO\Property::NightValue, '""');
-
+        $this->RegisterAttributeInteger(\Hoymiles2T\IO\Attribute::LastState, IS_CREATING);
         $this->RegisterTimer(\Hoymiles2T\IO\Timer::RequestState, 0, 'IPS_RequestAction(' . $this->InstanceID . ',"' . \Hoymiles2T\IO\Timer::RequestState . '",true);');
-        $this->RegisterTimer(\Hoymiles2T\IO\Timer::Reconnect, 0, 'IPS_RequestAction(' . $this->InstanceID . ',"' . \Hoymiles2T\IO\Timer::Reconnect . '",true);');
     }
 
     public function Destroy(): void
@@ -88,12 +87,42 @@ class Hoymiles2TIO extends IPSModuleStrict
             $this->RegisterMessage(0, IPS_KERNELSTARTED);
             return;
         }
+        if ($this->ReadPropertyString(\Hoymiles2T\IO\Property::Host) == '') {
+            return;
+        }
+
         if ($this->ReadPropertyBoolean(\Hoymiles2T\IO\Property::Active)) {
             $this->StartWithDayNightCheck();
         } else {
             $this->SetStatus(IS_INACTIVE);
         }
     }
+
+    public function SetActive(): bool
+    {
+        if ($this->ReadPropertyString(\Hoymiles2T\IO\Property::Host) == '') {
+            return false;
+        }
+        if (!$this->ReadPropertyBoolean(\Hoymiles2T\IO\Property::Active)) {
+            return false;
+        }
+
+        if ($this->GetStatus() != IS_INACTIVE) {
+            return false;
+        }
+        $this->SetStatus(IS_ACTIVE);
+        return true;
+    }
+
+    public function SetInactive(): bool
+    {
+        if ($this->GetStatus() != IS_ACTIVE) {
+            return false;
+        }
+        $this->SetStatus(IS_INACTIVE);
+        return true;
+    }
+    
     /**
      * Nachrichten aus der Nachrichtenschlange verarbeiten.
      *
@@ -119,9 +148,6 @@ class Hoymiles2TIO extends IPSModuleStrict
         switch ($Ident) {
             case \Hoymiles2T\IO\Timer::RequestState:
                 $this->RequestState();
-                return;
-            case \Hoymiles2T\IO\Timer::Reconnect:
-                $this->ApplyChanges();
                 return;
             case \Hoymiles2T\IO\Property::LocationId:
                 $this->UpdateNightObjectForm($Value);
@@ -216,11 +242,18 @@ class Hoymiles2TIO extends IPSModuleStrict
 
     protected function SetStatus(int $NewState): bool
     {
-        $this->SetTimerInterval(\Hoymiles2T\IO\Timer::RequestState, 0);
-        $this->SetTimerInterval(\Hoymiles2T\IO\Timer::Reconnect, 0);
-
-        if ($NewState == IS_ACTIVE) {
-            $this->SetTimerInterval(\Hoymiles2T\IO\Timer::RequestState, $this->ReadPropertyInteger(\Hoymiles2T\IO\Property::RequestInterval) * 1000);
+        switch ($NewState) {
+            case IS_ACTIVE:
+                $this->SetTimerInterval(\Hoymiles2T\IO\Timer::RequestState, $this->ReadPropertyInteger(\Hoymiles2T\IO\Property::RequestInterval) * 1000);
+                $this->WriteAttributeInteger(\Hoymiles2T\IO\Attribute::LastState, IS_ACTIVE);
+                break;
+            case IS_INACTIVE:
+                $this->WriteAttributeInteger(\Hoymiles2T\IO\Attribute::LastState, IS_INACTIVE);
+                // And deactivate timer
+                // No break. Add additional comment above this line if intentional
+            default:
+                $this->SetTimerInterval(\Hoymiles2T\IO\Timer::RequestState, 0);
+                break;
         }
         parent::SetStatus($NewState);
         return true;

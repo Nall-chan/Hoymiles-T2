@@ -37,20 +37,17 @@ namespace Hoymiles2T\IO{
         public const DayValue = 'DayValue';
         public const NightValue = 'NightValue';
     }
-
+    class Attribute
+    {
+        public const LastState = 'LastState';
+    }
     class Timer
     {
         public const RequestState = 'RequestState';
-        public const Reconnect = 'Reconnect';
-    }
-
-    class Attribute
-    {
     }
 
     class InstanceStatus
     {
-        public const ConfigError = IS_EBASE + 1;
         public const TimeoutError = IS_EBASE + 2;
     }
     class Locks
