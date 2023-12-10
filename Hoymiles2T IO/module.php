@@ -31,6 +31,28 @@ class AutoLoaderHoymiles2T
 require_once dirname(__DIR__) . '/libs/Hoymiles2T.php';
 require_once dirname(__DIR__) . '/libs/Hoymiles/RealDataResDTO.php';
 require_once dirname(__DIR__) . '/libs/Hoymiles/RealDataReqDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/CommandReqDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/CommandResDTO.php';
+/*
+require_once dirname(__DIR__) . '/libs/Hoymiles/GetConfigReqDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/GetConfigResDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/InfoDataReqDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/InfoDataResDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/NetworkInfoReqDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/NetworkInfoResDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/WarnReqDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/WarnResDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/CommandStatusReqDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/CommandStatusResDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/DevConfigFetchResDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/DevConfigFetchReqDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/EventDataReqDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/EventDataResDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/HBReqDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/HBResDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/WWVDataReqDTO.php';
+require_once dirname(__DIR__) . '/libs/Hoymiles/WWVDataResDTO.php';
+ */
 eval('declare(strict_types=1);namespace HoymilesIO {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/DebugHelper.php') . '}');
 eval('declare(strict_types=1);namespace HoymilesIO {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/BufferHelper.php') . '}');
 eval('declare(strict_types=1);namespace HoymilesIO {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/SemaphoreHelper.php') . '}');
@@ -224,12 +246,134 @@ class Hoymiles2TIO extends IPSModuleStrict
     }
     public function ForwardData($JSONString): string
     {
-        return serialize(
-            [
-                \Hoymiles2T\ConfigArray::NbrOfInverter  => $this->NbrOfInverter,
-                \Hoymiles2T\ConfigArray::NbrOfSolarPort => $this->NbrOfSolarPort
-            ]
-        );
+        $Data = json_decode($JSONString, true);
+        switch ($Data['Function']) {
+            case 'ListDevices':
+                return serialize(
+                    [
+                        \Hoymiles2T\ConfigArray::NbrOfInverter  => $this->NbrOfInverter,
+                        \Hoymiles2T\ConfigArray::NbrOfSolarPort => $this->NbrOfSolarPort
+                    ]
+                );
+            case 'SetPowerLimit':
+
+                $Request = new \Hoymiles\CommandResDTO();
+                $Request->setTime(time());
+                $Request->setTid(time());
+                $Request->setPackageNub(1);
+                $Request->setAction(8);
+                $Request->setData($Data['Data']);
+                $RequestBytes = $Request->serializeToString();
+                $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::CommandResDTO, $RequestBytes);
+                if (!$ResultStream) {
+                    return serialize(false);
+                }
+                $Result = new \Hoymiles\CommandReqDTO();
+                $Result->mergeFromString($ResultStream);
+                return serialize($Result->getErrCode() == 0);
+        }
+    }
+
+    protected function Test(): bool
+    {
+        // WWVDataResDTO commando unbekannt
+        // EventDataResDTO commando unbekannt
+        /*
+        $Request = new \Hoymiles\EventDataResDTO();
+        $Request->setTime(time());
+        $Request->setOffset(28800);
+        //$Request->setYmdHmsStart(date('Y-m-d H:i:s', time()-1841976410));//-60*60*24*7));
+        $RequestBytes = $Request->serializeToString();
+        $ResultStream = $this->SendCommand(0xA301, $RequestBytes);
+        if (!$ResultStream) {
+            return false;
+        }
+        $Result = new \Hoymiles\EventDataReqDTO();
+        $Result->mergeFromString($ResultStream);
+         */
+        /*
+        $Request = new \Hoymiles\DevConfigFetchResDTO();
+        $RequestBytes = $Request->serializeToString();
+        $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::DevConfigFetchResDTO, $RequestBytes);
+        if (!$ResultStream) {
+            return false;
+        }
+        $Result = new \Hoymiles\DevConfigFetchReqDTO();
+        $Result->mergeFromString($ResultStream);
+         */
+        /*
+        $Request = new \Hoymiles\CommandStatusResDTO();
+        $Request->setPackageNow(1);
+        $Request->setTime(time());
+        $Request->setAction(8);
+        $RequestBytes = $Request->serializeToString();
+        $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::CommandStatusResDTO, $RequestBytes);
+        if (!$ResultStream) {
+            return false;
+        }
+        $Result = new \Hoymiles\CommandStatusReqDTO();
+        $Result->mergeFromString($ResultStream);
+         */
+        /*
+        $Request = new \Hoymiles\CommandResDTO();
+        $Request->setTime(time());
+        $Request->setTid(time());
+        $Request->setPackageNub(1);
+        $Request->setAction(8);
+        $Request->setData("A:800\r");
+        $RequestBytes = $Request->serializeToString();
+        $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::CommandResDTO, $RequestBytes);
+        if (!$ResultStream) {
+            return false;
+        }
+        $Result = new \Hoymiles\CommandReqDTO();
+        $Result->mergeFromString($ResultStream);
+         */
+        /*
+        $Request = new \Hoymiles\WarnResDTO();
+        $RequestBytes = $Request->serializeToString();
+        $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::WarnResDTO, $RequestBytes);
+        if (!$ResultStream) {
+            return false;
+        }
+        $Result = new \Hoymiles\WarnReqDTO();
+        $Result->mergeFromString($ResultStream);
+         */
+        /*
+        $Request = new \Hoymiles\NetworkInfoResDTO();
+        $RequestBytes = $Request->serializeToString();
+        $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::NetworkInfoResDTO, $RequestBytes);
+        if (!$ResultStream) {
+            return false;
+        }
+        $Result = new \Hoymiles\NetworkInfoReqDTO();
+        $Result->mergeFromString($ResultStream);
+         */
+        /*
+        $Request = new \Hoymiles\InfoDataResDTO();
+        $RequestBytes = $Request->serializeToString();
+        $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::InfoDataResDTO, $RequestBytes);
+        if (!$ResultStream) {
+            return false;
+        }
+        $Result = new \Hoymiles\InfoDataReqDTO();
+        $Result->mergeFromString($ResultStream);
+         */
+        /*
+        $Request = new \Hoymiles\GetConfigResDTO();
+        $RequestBytes = $Request->serializeToString();
+        $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::GetConfig, $RequestBytes);
+        if (!$ResultStream) {
+            return false;
+        }
+        $Result = new \Hoymiles\GetConfigReqDTO(); // rssi in -db ?
+        $Result->mergeFromString($ResultStream);
+         */
+
+        $Json = $Result->serializeToJsonString();
+        $this->SendDebug('TEST', $Json, 0);
+        $this->SendDebug('TEST', json_decode($Json, true), 0);
+        return true;
     }
 
     /**
@@ -319,11 +463,14 @@ class Hoymiles2TIO extends IPSModuleStrict
     {
         //todo
         $this->SetStatus(IS_ACTIVE);
+        //$this->RequestState();
     }
     private function RealDataResDTO(): bool
     {
         $Request = new \Hoymiles\RealDataResDTO();
-        //todo set time ?
+        $Request->setYmdHms(date('Y-m-d H:i:s', time()));
+        $Request->setTime(time());
+        $Request->setOft(28800);
         $RequestBytes = $Request->serializeToString();
         $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::RealDataResDTO, $RequestBytes);
         if (!$ResultStream) {
@@ -333,6 +480,9 @@ class Hoymiles2TIO extends IPSModuleStrict
         $Result = new \Hoymiles\RealDataReqDTO();
         $Result->mergeFromString($ResultStream);
 
+        $Json = $Result->serializeToJsonString();
+        //$this->SendDebug('TEST', $Json, 0);
+        //$this->SendDebug('TEST', json_decode($Json, true), 0);
         $DTU = json_encode([
             'sn'            => $Result->getSn(),
             'time'          => $Result->getTime(),
@@ -383,12 +533,16 @@ class Hoymiles2TIO extends IPSModuleStrict
 
     private function SendCommand(int $Command, string $RequestBytes): false|string
     {
-        $this->SendDebug('SendCommand', $Command, 0);
-        $CRC16 = $this->CRC16($RequestBytes);
+        $this->SendDebug('SendCommand', pack('n', $Command), 1);
+        $this->SendDebug('RequestBytes', $RequestBytes, 1);
+        $CRC16 = pack('n', $this->CRC16($RequestBytes));
         $Len = strlen($RequestBytes) + 10;
+        //$this->SendDebug('CRC16', $CRC16, 1);
+        //$this->SendDebug('Len', $Len, 0);
         $this->lock(\Hoymiles2T\IO\Locks::SendSequenz);
-        $Content = \Hoymiles\DTU\SendStream::Header . pack('n', $Command) . pack('n', ++$this->Sequenz) . $RequestBytes . $CRC16 . pack('n', $Len);
+        $Sequenz = ++$this->Sequenz;
         $this->unlock(\Hoymiles2T\IO\Locks::SendSequenz);
+        $Content = \Hoymiles\DTU\SendStream::Header . pack('n', $Command) . pack('n', $Sequenz) . $CRC16 . pack('n', $Len) . $RequestBytes;
         $DeviceAddress = 'tcp://' . $this->ReadPropertyString(\Hoymiles2T\IO\Property::Host) . ':' . $this->ReadPropertyInteger(\Hoymiles2T\IO\Property::Port);
         $errno = 0;
         $errstr = '';
@@ -398,7 +552,7 @@ class Hoymiles2TIO extends IPSModuleStrict
             // todo trigger_error
             return false;
         } else {
-            $this->SendDebug('Send', $Content, 0);
+            $this->SendDebug('Send', $Content, 1);
             for ($fwrite = 0, $written = 0, $max = strlen($Content); $written < $max; $written += $fwrite) {
                 $fwrite = @fwrite($fp, substr($Content, $written));
                 if ($fwrite === false) {
@@ -412,20 +566,43 @@ class Hoymiles2TIO extends IPSModuleStrict
             $Data = fread($fp, 8192);
             fclose($fp);
         }
+        if (!$Data) {
+            // todo trigger_error
+            $this->SendDebug('ERROR (0)', 'Timeout', 0);
+            return false;
+        }
         $Header = substr($Data, 0, 10);
-        $this->SendDebug('Recv Header', substr($Header, 0, 2), 1);
-        $this->SendDebug('Recv Command', unpack('n', substr($Header, 2, 2))[1], 0);
-        $this->SendDebug('Recv Sequenz', unpack('n', substr($Header, 4, 2))[1], 0);
-        $this->SendDebug('Recv CRC', substr($Header, 6, 2), 1);
-        $this->SendDebug('Recv Len', unpack('n', substr($Header, 8, 2))[1], 0);
         $Payload = substr($Data, 10);
+        //$this->SendDebug('Recv Header', substr($Header, 0, 2), 1);
+        $this->SendDebug('Recv Command', substr($Header, 2, 2), 1);
+        $this->SendDebug('Recv Payload', $Payload, 1);
+        if ($Sequenz != unpack('n', substr($Header, 4, 2))[1]) {
+            trigger_error($this->Translate('Invalid Sequenz received.'), E_USER_NOTICE);
+            return false;
+        }
+        //$this->SendDebug('Recv Sequenz', unpack('n', substr($Header, 4, 2))[1], 0);
+        $Len = unpack('n', substr($Header, 8, 2))[1];
+        //$this->SendDebug('Recv Len', $Len, 0);
+        if ($Len != strlen($Payload) + 10) {
+            trigger_error($this->Translate('Data has wrong length.'), E_USER_NOTICE);
+            return false;
+        }
+        //$this->SendDebug('Recv CRC', substr($Header, 6, 2), 1);
+        $CRC16 = pack('n', $this->CRC16($Payload));
+        //$this->SendDebug('Recv CRC', $CRC16, 1);
+        if ($CRC16 != substr($Header, 6, 2)) {
+            trigger_error($this->Translate('Invalid checksum.'), E_USER_NOTICE);
+            return false;
+        }
         return $Payload;
     }
 
-    private function CRC16(string $string): string
+    private function CRC16(string $string): int
     {
         $crc = 0xffff;
+        //0x18005
         $polynom = 0x8005;
+        /*
         for ($x = 0; $x < strlen($string); $x++) {
             $crc = $crc ^ ord($string[$x]);
             for ($y = 0; $y < 8; $y++) {
@@ -439,6 +616,51 @@ class Hoymiles2TIO extends IPSModuleStrict
         $high_byte = ($crc & 0xff00) / 256;
         $low_byte = $crc & 0x00ff;
 
-        return chr($high_byte) . chr($low_byte);
+        return chr($high_byte) . chr($low_byte);*/
+        for ($i = 0; $i < strlen($string); $i++) {
+            $c = ord(self::reverseChar($string[$i]));
+            $crc ^= ($c << 8);
+            for ($j = 0; $j < 8; ++$j) {
+                if ($crc & 0x8000) {
+                    $crc = (($crc << 1) & 0xffff) ^ $polynom;
+                } else {
+                    $crc = ($crc << 1) & 0xffff;
+                }
+            }
+        }
+        $ret = pack('cc', $crc & 0xff, ($crc >> 8) & 0xff);
+        $ret = self::reverseString($ret);
+        $arr = unpack('vshort', $ret);
+        $crc = $arr['short'];
+        return $crc;
     }
+        private static function reverseString($str)
+        {
+            $m = 0;
+            $n = strlen($str) - 1;
+            while ($m <= $n) {
+                if ($m == $n) {
+                    $str[$m] = self::reverseChar($str[$m]);
+                    break;
+                }
+                $ord1 = self::reverseChar($str[$m]);
+                $ord2 = self::reverseChar($str[$n]);
+                $str[$m] = $ord2;
+                $str[$n] = $ord1;
+                $m++;
+                $n--;
+            }
+            return $str;
+        }
+        private static function reverseChar($char)
+        {
+            $byte = ord($char);
+            $tmp = 0;
+            for ($i = 0; $i < 8; ++$i) {
+                if ($byte & (1 << $i)) {
+                    $tmp |= (1 << (7 - $i));
+                }
+            }
+            return chr($tmp);
+        }
 }

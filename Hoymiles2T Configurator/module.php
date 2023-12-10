@@ -59,7 +59,7 @@ class Hoymiles2TConfigurator extends IPSModuleStrict
             return [0, 0];
         }
         $ret = $this->SendDataToParent(json_encode([
-            'DataID'   => \Hoymiles2T\GUID::ConfiguratorToIo,
+            'DataID'   => \Hoymiles2T\GUID::DeviceToIo,
             'Function' => 'ListDevices',
         ]));
         $Devices = unserialize($ret);

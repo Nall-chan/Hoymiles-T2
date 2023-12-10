@@ -14,7 +14,7 @@ namespace Hoymiles2T{
         public const IoToInverter = '{442F969D-D3B8-B949-EC0E-4B7BCC3C7853}';
         public const IoToSolarPort = '{85CA6AAE-6EE0-BE1F-FA4D-F0A3B569E3F7}';
         public const IoToConfigurator = '{CEE3BF9B-2A23-4433-ACAB-6E22F10D743F}';
-        public const ConfiguratorToIo = '{2651EA6C-47E9-BA79-7410-382895EC8244}';
+        public const DeviceToIo = '{2651EA6C-47E9-BA79-7410-382895EC8244}';
         public const LocationControl = '{45E97A63-F870-408A-B259-2933F7EABF74}';
     }
     class ConfigArray
@@ -71,14 +71,25 @@ namespace Hoymiles2T\Inverter{
         public const PowerFactor = 'pf'; // 0.1 Pf
         public const Temp = 'temp'; // 0.1 °C
         public const Link = 'link'; // bool ?
+        public const PowerLimit = 'pLim'; // 0.1 %
         public static $Vars = [
-            self::Voltage     => ['Voltage', VARIABLETYPE_FLOAT, '~Volt.230', 0.1],
-            self::Frequenz    => ['Frequenz', VARIABLETYPE_FLOAT, '~Hertz.50', 0.01],
-            self::Power       => ['Power', VARIABLETYPE_FLOAT, '~Watt', 0.1],
-            self::Current     => ['Current', VARIABLETYPE_FLOAT, '~Ampere', 0.01],
-            self::PowerFactor => ['Power factor', VARIABLETYPE_FLOAT, '~Valve.F', 0.1],
-            self::Temp        => ['Temperature', VARIABLETYPE_FLOAT, '~Temperature', 0.1],
-            self::Link        => ['Link', VARIABLETYPE_BOOLEAN, '~Alert.Reversed'],
+            self::Voltage           => ['Voltage', VARIABLETYPE_FLOAT, '~Volt.230', 0.1],
+            self::Frequenz          => ['Frequenz', VARIABLETYPE_FLOAT, '~Hertz.50', 0.01],
+            self::Power             => ['Power', VARIABLETYPE_FLOAT, '~Watt', 0.1],
+            self::Current           => ['Current', VARIABLETYPE_FLOAT, '~Ampere', 0.01],
+            self::PowerFactor       => ['Power factor', VARIABLETYPE_FLOAT, '~Valve.F', 0.1],
+            self::Temp              => ['Temperature', VARIABLETYPE_FLOAT, '~Temperature', 0.1],
+            self::Link              => ['Link', VARIABLETYPE_BOOLEAN, '~Alert.Reversed'],
+            self::PowerLimit        => ['Power Limit', VARIABLETYPE_INTEGER, '~Intensity.100', 0.1, true],
+        ];
+    }
+    class SetPowerLimit
+    {
+        public static $DataPrefix = [
+            '',
+            'A',
+            'B',
+            'C'
         ];
     }
 }
@@ -130,30 +141,54 @@ namespace Hoymiles\DTU{
     }
     class Commands
     {
-        public const APPInfoDataResDTO = -23807; //Response APPInfoDataReqDTO
-        public const HBResDTO = -23806; // Response HBReqDTO
-        public const RealDataResDTO = -23805;
-        public const WInfoResDTO = -23804;
-        public const CommandResDTO = -23803;
-        public const CommandStatusResDTO = -23802; // Response: CommandStatusReqDTO
-        public const DevConfigFetchResDTO = -23801;
-        public const DevConfigPutResDTO = -23800;
-        public const GetConfig = -23799;
-        public const SetConfig = -23792;
-        public const RealResDTO = -23791;
-        public const GPSTResDTO = -23790;
-        public const AutoSearch = -23789;
-        public const NetworkInfoRes = -23788; // Response: NetworkInfoReq
-        public const AppGetHistPowerRes = -23787; // Response: AppGetHistPowerReq
-        public const AppGetHistEDRes = -23786; // Response: AppGetHistEDReq
-        //public const HBResDTO = -31999;
-        public const RegisterResDTO = -31998;
-        public const StorageDataRes = -31997;
-        //public const CommandResDTO = -31995;
-        //public const CommandStatusResDTO = -31994;
-        //public const DevConfigFetchResDTO = -31993;
-        //public const DevConfigPutResDTO = -31992;
-        public const GetConfigRes = -9464;
-        public const SetConfigRes = -9465;
+        // InfoDataResDTO -> wifi SignalStrength
+        public const InfoDataResDTO = 0xA301; //Response: A201 InfoDataReqDTO
+
+        //HBResDTO
+        public const HBResDTO = 0xA302; // Response: A202 HBReqDTO
+
+        //public const RegisterResDTO = 0x8302; // oder auch 0xA302
+        //public const StorageDataRes = 0x8303; // oder auch 0xA303
+
+        // WarnResDTO
+        public const WarnResDTO = 0xA304; // Response: A204 WarnReqDTO
+
+        // CommandResDTO //powerlimit
+        /*
+            request.time = int(time.time())
+    request.tid = int(time.time())
+    request.action = 8
+    request.package_nub = 1
+    request.data = 'A:1000,B:0,C:0\r'.encode('utf-8')
+         */
+        public const CommandResDTO = 0xA305; // Response: A205 CommandReqDTO
+
+        // CommandStatusResDTO
+        public const CommandStatusResDTO = 0xA306; // Response: A206 CommandStatusReqDTO
+
+        // DevConfigFetchResDTO
+        public const DevConfigFetchResDTO = 0xA307; // Response: A207 DevConfigFetchReqDTO
+
+        // DevConfigPutResDTO
+        public const DevConfigPutResDTO = 0xA308; // Response: A208 DevConfigPutReqDTO
+
+        // GetConfigResDTO
+        public const GetConfigResDTO = 0xA309; // Response: A209 GetConfigReqDTO
+
+        // noch testen
+        // SetConfigResDTO
+        public const SetConfig = 0xA310; // Response: A210 SetConfigReqDTO
+
+        // RealDataResDTO
+        public const RealDataResDTO = 0xA311; // Response A211 RealDataReqDTO
+
+        public const GPSTResDTO = 0xA312;
+        public const AutoSearch = 0xA313;
+
+        // NetworkInfoResDTO
+        public const NetworkInfoResDTO = 0xA314; // Response: A214 NetworkInfoReqDTO
+
+        public const AppGetHistPowerRes = 0xA315; // Response: AppGetHistPowerReq
+        public const AppGetHistEDRes = 0xA316; // Response: AppGetHistEDReq
     }
 }
