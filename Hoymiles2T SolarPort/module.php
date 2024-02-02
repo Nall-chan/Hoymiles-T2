@@ -20,12 +20,6 @@ class Hoymiles2TSolarPort extends IPSModuleStrict
         $this->ConnectParent(\Hoymiles2T\GUID::IO);
     }
 
-    public function Destroy(): void
-    {
-        //Never delete this line!
-        parent::Destroy();
-    }
-
     public function ApplyChanges(): void
     {
         $Address = $this->ReadPropertyInteger(\Hoymiles2T\SolarPort\Property::Port);

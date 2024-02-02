@@ -75,11 +75,9 @@ class Hoymiles2TIO extends IPSModuleStrict
     public function Create(): void
     {
         parent::Create();
-
         $this->Sequenz = 0;
         $this->NbrOfInverter = 0;
         $this->NbrOfSolarPort = 0;
-
         $this->RegisterPropertyBoolean(\Hoymiles2T\IO\Property::Active, false);
         $this->RegisterPropertyString(\Hoymiles2T\IO\Property::Host, '');
         $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::Port, 10081);
@@ -162,6 +160,7 @@ class Hoymiles2TIO extends IPSModuleStrict
                 break;
         }
     }
+
     /**
      * Interne Funktion des SDK.
      */
@@ -244,6 +243,7 @@ class Hoymiles2TIO extends IPSModuleStrict
         }
         return $this->RealDataResDTO();
     }
+
     public function ForwardData($JSONString): string
     {
         $Data = json_decode($JSONString, true);
@@ -256,7 +256,6 @@ class Hoymiles2TIO extends IPSModuleStrict
                     ]
                 );
             case 'SetPowerLimit':
-
                 $Request = new \Hoymiles\CommandResDTO();
                 $Request->setTime(time());
                 $Request->setTid(time());
@@ -439,6 +438,7 @@ class Hoymiles2TIO extends IPSModuleStrict
                 break;
         }
     }
+
     private function UpdateNightObjectForm(int $LocationId): void
     {
         if ($LocationId < 10000) {
@@ -459,12 +459,14 @@ class Hoymiles2TIO extends IPSModuleStrict
         $this->UpdateFormField('StartVariableId', 'value', IPS_GetObjectIDByIdent('Sunrise', $LocationId));
         $this->UpdateFormField('StopVariableId', 'value', IPS_GetObjectIDByIdent('Sunset', $LocationId));
     }
+
     private function StartWithDayNightCheck()
     {
         //todo
         $this->SetStatus(IS_ACTIVE);
         //$this->RequestState();
     }
+
     private function RealDataResDTO(): bool
     {
         $Request = new \Hoymiles\RealDataResDTO();
@@ -480,9 +482,6 @@ class Hoymiles2TIO extends IPSModuleStrict
         $Result = new \Hoymiles\RealDataReqDTO();
         $Result->mergeFromString($ResultStream);
 
-        $Json = $Result->serializeToJsonString();
-        //$this->SendDebug('TEST', $Json, 0);
-        //$this->SendDebug('TEST', json_decode($Json, true), 0);
         $DTU = json_encode([
             'sn'            => $Result->getSn(),
             'time'          => $Result->getTime(),
@@ -541,6 +540,7 @@ class Hoymiles2TIO extends IPSModuleStrict
         //$this->SendDebug('Len', $Len, 0);
         $this->lock(\Hoymiles2T\IO\Locks::SendSequenz);
         $Sequenz = ++$this->Sequenz;
+        $this->SendDebug('SendSequenz', pack('n', $Sequenz), 1);
         $this->unlock(\Hoymiles2T\IO\Locks::SendSequenz);
         $Content = \Hoymiles\DTU\SendStream::Header . pack('n', $Command) . pack('n', $Sequenz) . $CRC16 . pack('n', $Len) . $RequestBytes;
         $DeviceAddress = 'tcp://' . $this->ReadPropertyString(\Hoymiles2T\IO\Property::Host) . ':' . $this->ReadPropertyInteger(\Hoymiles2T\IO\Property::Port);
@@ -573,14 +573,9 @@ class Hoymiles2TIO extends IPSModuleStrict
         }
         $Header = substr($Data, 0, 10);
         $Payload = substr($Data, 10);
-        //$this->SendDebug('Recv Header', substr($Header, 0, 2), 1);
         $this->SendDebug('Recv Command', substr($Header, 2, 2), 1);
         $this->SendDebug('Recv Payload', $Payload, 1);
-        if ($Sequenz != unpack('n', substr($Header, 4, 2))[1]) {
-            trigger_error($this->Translate('Invalid Sequenz received.'), E_USER_NOTICE);
-            return false;
-        }
-        //$this->SendDebug('Recv Sequenz', unpack('n', substr($Header, 4, 2))[1], 0);
+        $this->SendDebug('Recv Sequenz', unpack('n', substr($Header, 4, 2))[1], 0);
         $Len = unpack('n', substr($Header, 8, 2))[1];
         //$this->SendDebug('Recv Len', $Len, 0);
         if ($Len != strlen($Payload) + 10) {
@@ -600,23 +595,7 @@ class Hoymiles2TIO extends IPSModuleStrict
     private function CRC16(string $string): int
     {
         $crc = 0xffff;
-        //0x18005
         $polynom = 0x8005;
-        /*
-        for ($x = 0; $x < strlen($string); $x++) {
-            $crc = $crc ^ ord($string[$x]);
-            for ($y = 0; $y < 8; $y++) {
-                if (($crc & 0x0001) == 0x0001) {
-                    $crc = (($crc >> 1) ^ $polynom);
-                } else {
-                    $crc = $crc >> 1;
-                }
-            }
-        }
-        $high_byte = ($crc & 0xff00) / 256;
-        $low_byte = $crc & 0x00ff;
-
-        return chr($high_byte) . chr($low_byte);*/
         for ($i = 0; $i < strlen($string); $i++) {
             $c = ord(self::reverseChar($string[$i]));
             $crc ^= ($c << 8);
@@ -634,33 +613,35 @@ class Hoymiles2TIO extends IPSModuleStrict
         $crc = $arr['short'];
         return $crc;
     }
-        private static function reverseString($str)
-        {
-            $m = 0;
-            $n = strlen($str) - 1;
-            while ($m <= $n) {
-                if ($m == $n) {
-                    $str[$m] = self::reverseChar($str[$m]);
-                    break;
-                }
-                $ord1 = self::reverseChar($str[$m]);
-                $ord2 = self::reverseChar($str[$n]);
-                $str[$m] = $ord2;
-                $str[$n] = $ord1;
-                $m++;
-                $n--;
+
+    private static function reverseString($str)
+    {
+        $m = 0;
+        $n = strlen($str) - 1;
+        while ($m <= $n) {
+            if ($m == $n) {
+                $str[$m] = self::reverseChar($str[$m]);
+                break;
             }
-            return $str;
+            $ord1 = self::reverseChar($str[$m]);
+            $ord2 = self::reverseChar($str[$n]);
+            $str[$m] = $ord2;
+            $str[$n] = $ord1;
+            $m++;
+            $n--;
         }
-        private static function reverseChar($char)
-        {
-            $byte = ord($char);
-            $tmp = 0;
-            for ($i = 0; $i < 8; ++$i) {
-                if ($byte & (1 << $i)) {
-                    $tmp |= (1 << (7 - $i));
-                }
+        return $str;
+    }
+
+    private static function reverseChar($char)
+    {
+        $byte = ord($char);
+        $tmp = 0;
+        for ($i = 0; $i < 8; ++$i) {
+            if ($byte & (1 << $i)) {
+                $tmp |= (1 << (7 - $i));
             }
-            return chr($tmp);
         }
+        return chr($tmp);
+    }
 }

@@ -20,12 +20,6 @@ class Hoymiles2TDTU extends IPSModuleStrict
         $this->ConnectParent(\Hoymiles2T\GUID::IO);
     }
 
-    public function Destroy(): void
-    {
-        //Never delete this line!
-        parent::Destroy();
-    }
-
     public function ApplyChanges(): void
     {
         //Never delete this line!
@@ -39,6 +33,7 @@ class Hoymiles2TDTU extends IPSModuleStrict
         $this->DecodeData(json_decode($data->Data, true));
         return '';
     }
+
     private function DecodeData(array $DataValues): void
     {
         foreach ($DataValues as $Key => $Value) {

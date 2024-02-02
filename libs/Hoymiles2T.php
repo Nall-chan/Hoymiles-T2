@@ -17,6 +17,7 @@ namespace Hoymiles2T{
         public const DeviceToIo = '{2651EA6C-47E9-BA79-7410-382895EC8244}';
         public const LocationControl = '{45E97A63-F870-408A-B259-2933F7EABF74}';
     }
+
     class ConfigArray
     {
         public const NbrOfInverter = 'NbrOfInverter';
@@ -37,10 +38,12 @@ namespace Hoymiles2T\IO{
         public const DayValue = 'DayValue';
         public const NightValue = 'NightValue';
     }
+
     class Attribute
     {
         public const LastState = 'LastState';
     }
+
     class Timer
     {
         public const RequestState = 'RequestState';
@@ -50,6 +53,7 @@ namespace Hoymiles2T\IO{
     {
         public const TimeoutError = IS_EBASE + 2;
     }
+
     class Locks
     {
         public const SendSequenz = 'SendSequenz';
@@ -62,6 +66,7 @@ namespace Hoymiles2T\Inverter{
     {
         public const Number = 'Number';
     }
+
     class Variables
     {
         public const Voltage = 'v'; // 0.1 V
@@ -83,6 +88,7 @@ namespace Hoymiles2T\Inverter{
             self::PowerLimit        => ['Power Limit', VARIABLETYPE_INTEGER, '~Intensity.100', 0.1, true],
         ];
     }
+
     class SetPowerLimit
     {
         public static $DataPrefix = [
@@ -139,6 +145,7 @@ namespace Hoymiles\DTU{
     {
         public const Header = 'HM';
     }
+
     class Commands
     {
         // InfoDataResDTO -> wifi SignalStrength
@@ -154,13 +161,6 @@ namespace Hoymiles\DTU{
         public const WarnResDTO = 0xA304; // Response: A204 WarnReqDTO
 
         // CommandResDTO //powerlimit
-        /*
-            request.time = int(time.time())
-    request.tid = int(time.time())
-    request.action = 8
-    request.package_nub = 1
-    request.data = 'A:1000,B:0,C:0\r'.encode('utf-8')
-         */
         public const CommandResDTO = 0xA305; // Response: A205 CommandReqDTO
 
         // CommandStatusResDTO
@@ -177,7 +177,7 @@ namespace Hoymiles\DTU{
 
         // noch testen
         // SetConfigResDTO
-        public const SetConfig = 0xA310; // Response: A210 SetConfigReqDTO
+        public const SetConfigResDTO = 0xA310; // Response: A210 SetConfigReqDTO
 
         // RealDataResDTO
         public const RealDataResDTO = 0xA311; // Response A211 RealDataReqDTO

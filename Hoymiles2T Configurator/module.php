@@ -20,11 +20,6 @@ class Hoymiles2TConfigurator extends IPSModuleStrict
         $this->ConnectParent(\Hoymiles2T\GUID::IO);
     }
 
-    public function Destroy(): void
-    {
-        parent::Destroy();
-    }
-
     public function ApplyChanges(): void
     {
         parent::ApplyChanges();
@@ -53,6 +48,7 @@ class Hoymiles2TConfigurator extends IPSModuleStrict
         $this->SendDebug('FORM', json_last_error_msg(), 0);
         return json_encode($Form);
     }
+
     private function GetDevicesFromDTU(): array
     {
         if (!$this->HasActiveParent() || (@IPS_GetInstance($this->InstanceID)['ConnectionID'] < 10000)) {
@@ -69,6 +65,7 @@ class Hoymiles2TConfigurator extends IPSModuleStrict
             $Devices[\Hoymiles2T\ConfigArray::NbrOfSolarPort]
         ];
     }
+
     private function GetDTUConfigValues(): array
     {
         $FoundDevices = [];
@@ -106,6 +103,7 @@ class Hoymiles2TConfigurator extends IPSModuleStrict
         }
         return $FoundDevices;
     }
+
     private function GetDevicesConfigValues(string $Name, string $GUID, string $PropertyName, int $Numbers): array
     {
         $FoundDevices = [];
@@ -146,6 +144,7 @@ class Hoymiles2TConfigurator extends IPSModuleStrict
         }
         return $FoundDevices;
     }
+
     private function GetInstanceList(string $GUID, int $Parent, string $ConfigParam = ''): array
     {
         $InstanceIDList = [];
@@ -161,6 +160,7 @@ class Hoymiles2TConfigurator extends IPSModuleStrict
         }
         return $InstanceIDList;
     }
+
     private function GetConfigParam(&$item1, int $InstanceID, string $ConfigParam): void
     {
         $item1 = IPS_GetProperty($InstanceID, $ConfigParam);

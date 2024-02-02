@@ -7,6 +7,7 @@ eval('declare(strict_types=1);namespace Hoymiles2TInverter {?>' . file_get_conte
 
 /**
  * @method void SetValueBoolean(string $Ident, bool $value)
+ * @method void SetValueInteger(string $Ident, int $value)
  * @method void SetValueFloat(string $Ident, float $value)
  */
 class Hoymiles2TInverter extends IPSModuleStrict
@@ -19,12 +20,6 @@ class Hoymiles2TInverter extends IPSModuleStrict
         parent::Create();
         $this->RegisterPropertyInteger(\Hoymiles2T\Inverter\Property::Number, 1);
         $this->ConnectParent(\Hoymiles2T\GUID::IO);
-    }
-
-    public function Destroy(): void
-    {
-        //Never delete this line!
-        parent::Destroy();
     }
 
     public function ApplyChanges(): void
@@ -42,6 +37,7 @@ class Hoymiles2TInverter extends IPSModuleStrict
         //Never delete this line!
         parent::ApplyChanges();
     }
+
     public function RequestAction(string $Ident, mixed $Value): void
     {
         switch ($Ident) {
@@ -51,6 +47,7 @@ class Hoymiles2TInverter extends IPSModuleStrict
         }
         trigger_error($this->Translate('Invalid Ident') . ' :' . $Ident, E_USER_NOTICE);
     }
+
     public function ReceiveData(string $JSONString): string
     {
         $data = json_decode($JSONString);
@@ -58,6 +55,7 @@ class Hoymiles2TInverter extends IPSModuleStrict
         $this->DecodeData(json_decode($data->Data, true));
         return '';
     }
+
     public function SetPowerLimit(int $Limit): bool
     {
         if (!$this->HasActiveParent() || (@IPS_GetInstance($this->InstanceID)['ConnectionID'] < 10000)) {
@@ -80,6 +78,7 @@ class Hoymiles2TInverter extends IPSModuleStrict
         }
         return $Result;
     }
+
     private function DecodeData(array $DataValues): void
     {
         foreach ($DataValues as $Key => $Value) {
