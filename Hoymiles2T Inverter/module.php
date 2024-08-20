@@ -9,6 +9,7 @@ eval('declare(strict_types=1);namespace Hoymiles2TInverter {?>' . file_get_conte
  * @method void SetValueBoolean(string $Ident, bool $value)
  * @method void SetValueInteger(string $Ident, int $value)
  * @method void SetValueFloat(string $Ident, float $value)
+ *
  */
 class Hoymiles2TInverter extends IPSModuleStrict
 {

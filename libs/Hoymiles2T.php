@@ -32,6 +32,7 @@ namespace Hoymiles2T\IO{
         public const Host = 'Host';
         public const Port = 'Port';
         public const RequestInterval = 'RequestInterval';
+        public const SuppressConnectionError = 'SuppressConnectionError';
         public const LocationId = 'LocationId';
         public const StartVariableId = 'StartVariableId';
         public const StopVariableId = 'StopVariableId';

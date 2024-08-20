@@ -61,6 +61,10 @@ eval('declare(strict_types=1);namespace HoymilesIO {?>' . file_get_contents(dirn
  * @property int $Sequenz
  * @property int $NbrOfInverter
  * @property int $NbrOfSolarPort
+ * @property int $DayVariableId
+ * @property bool $DayVariableIsTimeStamp
+ * @property int $NightVariableId
+ * @property bool $NightVariableIsTimeStamp
  *
  * @method bool lock(string $ident)
  * @method void unlock(string $ident)
@@ -78,10 +82,15 @@ class Hoymiles2TIO extends IPSModuleStrict
         $this->Sequenz = 0;
         $this->NbrOfInverter = 0;
         $this->NbrOfSolarPort = 0;
+        $this->DayVariableId = 1;
+        $this->DayVariableIsTimeStamp = false;
+        $this->NightVariableId = 1;
+        $this->NightVariableIsTimeStamp = false;
         $this->RegisterPropertyBoolean(\Hoymiles2T\IO\Property::Active, false);
         $this->RegisterPropertyString(\Hoymiles2T\IO\Property::Host, '');
         $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::Port, 10081);
         $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::RequestInterval, 10);
+        $this->RegisterPropertyBoolean(\Hoymiles2T\IO\Property::SuppressConnectionError, true);
         $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::LocationId, 1);
         $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::StartVariableId, 1);
         $this->RegisterPropertyInteger(\Hoymiles2T\IO\Property::StopVariableId, 1);
@@ -98,21 +107,49 @@ class Hoymiles2TIO extends IPSModuleStrict
 
     public function ApplyChanges(): void
     {
-        parent::ApplyChanges();
+        $this->UnregisterVariableWatch($this->DayVariableId);
+        $this->UnregisterVariableWatch($this->NightVariableId);
         $this->Sequenz = 0;
+        $this->DayVariableIsTimeStamp = false;
+        $this->NightVariableIsTimeStamp = false;
+        $this->DayVariableId = 1;
+        $this->NightVariableId = 1;
+        parent::ApplyChanges();
         $this->SetSummary($this->ReadPropertyString(\Hoymiles2T\IO\Property::Host));
-
         // Wenn Kernel nicht bereit, dann warten... KR_READY kommt ja gleich
         if (IPS_GetKernelRunlevel() != KR_READY) {
             $this->RegisterMessage(0, IPS_KERNELSTARTED);
             return;
         }
         if ($this->ReadPropertyString(\Hoymiles2T\IO\Property::Host) == '') {
+            $this->SetStatus(IS_INACTIVE);
             return;
         }
-
         if ($this->ReadPropertyBoolean(\Hoymiles2T\IO\Property::Active)) {
-            $this->StartWithDayNightCheck();
+            $this->DayVariableId = $this->ReadPropertyInteger(\Hoymiles2T\IO\Property::StartVariableId);
+            $this->NightVariableId = $this->ReadPropertyInteger(\Hoymiles2T\IO\Property::StopVariableId);
+            $this->RegisterVariableWatch($this->DayVariableId);
+            $this->RegisterVariableWatch($this->NightVariableId);
+            if (($this->DayVariableId > 1) && ($this->DayVariableId > 1)) {
+                $this->SendDebug(__FUNCTION__, 'Day & Night are set', 0);
+                if (!IPS_VariableExists($this->NightVariableId)) {
+                    $this->SendDebug(__FUNCTION__, 'Night INVALID', 0);
+                    $this->SetStatus(IS_EBASE + 1);
+                    return;
+                }
+                if (!IPS_VariableExists($this->DayVariableId)) {
+                    $this->SendDebug(__FUNCTION__, 'Day INVALID', 0);
+                    $this->SetStatus(IS_EBASE + 1);
+                    return;
+                }
+                $this->NightVariableIsTimeStamp = (IPS_GetVariable($this->NightVariableId)['VariableProfile'] == '~UnixTimestamp');
+                $this->DayVariableIsTimeStamp = (IPS_GetVariable($this->DayVariableId)['VariableProfile'] == '~UnixTimestamp');
+                if (!$this->DayCheck(GetValue($this->DayVariableId))) {
+                    $this->NightCheck(GetValue($this->DayVariableId));
+                }
+            } else {
+                $this->StartWithLastStateCheck();
+            }
         } else {
             $this->SetStatus(IS_INACTIVE);
         }
@@ -120,6 +157,7 @@ class Hoymiles2TIO extends IPSModuleStrict
 
     public function SetActive(): bool
     {
+        $this->SendDebug(__FUNCTION__, '', 0);
         if ($this->ReadPropertyString(\Hoymiles2T\IO\Property::Host) == '') {
             return false;
         }
@@ -127,15 +165,17 @@ class Hoymiles2TIO extends IPSModuleStrict
             return false;
         }
 
-        if ($this->GetStatus() != IS_INACTIVE) {
+        if ($this->GetStatus() == IS_ACTIVE) {
             return false;
         }
         $this->SetStatus(IS_ACTIVE);
+        $this->RequestState();
         return true;
     }
 
     public function SetInactive(): bool
     {
+        $this->SendDebug(__FUNCTION__, '', 0);
         if ($this->GetStatus() != IS_ACTIVE) {
             return false;
         }
@@ -157,6 +197,24 @@ class Hoymiles2TIO extends IPSModuleStrict
             case IPS_KERNELSTARTED:
                 $this->UnregisterMessage(0, IPS_KERNELSTARTED);
                 $this->KernelReady();
+                break;
+            case VM_UPDATE:
+                if ($SenderID == $this->DayVariableId) {
+                    $this->DayCheck($Data[0]);
+                }
+                if ($SenderID == $this->NightVariableId) {
+                    $this->NightCheck($Data[0]);
+                }
+                break;
+            case VM_DELETE:
+                if ($SenderID == $this->DayVariableId) {
+                    $this->UnregisterVariableWatch($this->DayVariableId);
+                    $this->DayVariableId = 1;
+                }
+                if ($SenderID == $this->NightVariableId) {
+                    $this->UnregisterVariableWatch($this->NightVariableId);
+                    $this->NightVariableId = 1;
+                }
                 break;
         }
     }
@@ -201,9 +259,9 @@ class Hoymiles2TIO extends IPSModuleStrict
         }
         if ($StartVariableId) {
             $Form['elements'][3]['items'][1]['variableID'] = $StartVariableId;
-            $Form['elements'][3]['items'][1]['value'] = json_decode($this->ReadPropertyString(\Hoymiles2T\IO\Property::DayValue), true);
+            //$Form['elements'][3]['items'][1]['value'] = json_decode($this->ReadPropertyString(\Hoymiles2T\IO\Property::DayValue), true);
         } else {
-            $Form['elements'][3]['items'][1]['variableID'] = -1;
+            $Form['elements'][3]['items'][1]['variableID'] = 1;
             $Form['elements'][3]['items'][1]['value'] = '""';
             $Form['elements'][3]['items'][1]['visible'] = false;
         }
@@ -224,9 +282,9 @@ class Hoymiles2TIO extends IPSModuleStrict
 
         if ($StopVariableId) {
             $Form['elements'][4]['items'][1]['variableID'] = $StopVariableId;
-            $Form['elements'][4]['items'][1]['value'] = json_decode($this->ReadPropertyString(\Hoymiles2T\IO\Property::NightValue), true);
+            //$Form['elements'][4]['items'][1]['value'] = json_decode($this->ReadPropertyString(\Hoymiles2T\IO\Property::NightValue), true);
         } else {
-            $Form['elements'][4]['items'][1]['variableID'] = -1;
+            $Form['elements'][4]['items'][1]['variableID'] = 1;
             $Form['elements'][4]['items'][1]['value'] = '""';
             $Form['elements'][4]['items'][1]['visible'] = false;
         }
@@ -273,11 +331,13 @@ class Hoymiles2TIO extends IPSModuleStrict
         }
     }
 
-    protected function Test(): bool
-    {
+    /*
+        protected function Test(): bool
+        {
         // WWVDataResDTO commando unbekannt
         // EventDataResDTO commando unbekannt
-        /*
+     */
+    /*
         $Request = new \Hoymiles\EventDataResDTO();
         $Request->setTime(time());
         $Request->setOffset(28800);
@@ -289,8 +349,8 @@ class Hoymiles2TIO extends IPSModuleStrict
         }
         $Result = new \Hoymiles\EventDataReqDTO();
         $Result->mergeFromString($ResultStream);
-         */
-        /*
+     */
+    /*
         $Request = new \Hoymiles\DevConfigFetchResDTO();
         $RequestBytes = $Request->serializeToString();
         $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::DevConfigFetchResDTO, $RequestBytes);
@@ -299,8 +359,8 @@ class Hoymiles2TIO extends IPSModuleStrict
         }
         $Result = new \Hoymiles\DevConfigFetchReqDTO();
         $Result->mergeFromString($ResultStream);
-         */
-        /*
+     */
+    /*
         $Request = new \Hoymiles\CommandStatusResDTO();
         $Request->setPackageNow(1);
         $Request->setTime(time());
@@ -312,8 +372,8 @@ class Hoymiles2TIO extends IPSModuleStrict
         }
         $Result = new \Hoymiles\CommandStatusReqDTO();
         $Result->mergeFromString($ResultStream);
-         */
-        /*
+     */
+    /*
         $Request = new \Hoymiles\CommandResDTO();
         $Request->setTime(time());
         $Request->setTid(time());
@@ -327,8 +387,8 @@ class Hoymiles2TIO extends IPSModuleStrict
         }
         $Result = new \Hoymiles\CommandReqDTO();
         $Result->mergeFromString($ResultStream);
-         */
-        /*
+     */
+    /*
         $Request = new \Hoymiles\WarnResDTO();
         $RequestBytes = $Request->serializeToString();
         $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::WarnResDTO, $RequestBytes);
@@ -337,8 +397,8 @@ class Hoymiles2TIO extends IPSModuleStrict
         }
         $Result = new \Hoymiles\WarnReqDTO();
         $Result->mergeFromString($ResultStream);
-         */
-        /*
+     */
+    /*
         $Request = new \Hoymiles\NetworkInfoResDTO();
         $RequestBytes = $Request->serializeToString();
         $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::NetworkInfoResDTO, $RequestBytes);
@@ -347,8 +407,8 @@ class Hoymiles2TIO extends IPSModuleStrict
         }
         $Result = new \Hoymiles\NetworkInfoReqDTO();
         $Result->mergeFromString($ResultStream);
-         */
-        /*
+     */
+    /*
         $Request = new \Hoymiles\InfoDataResDTO();
         $RequestBytes = $Request->serializeToString();
         $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::InfoDataResDTO, $RequestBytes);
@@ -357,8 +417,8 @@ class Hoymiles2TIO extends IPSModuleStrict
         }
         $Result = new \Hoymiles\InfoDataReqDTO();
         $Result->mergeFromString($ResultStream);
-         */
-        /*
+     */
+    /*
         $Request = new \Hoymiles\GetConfigResDTO();
         $RequestBytes = $Request->serializeToString();
         $ResultStream = $this->SendCommand(\Hoymiles\DTU\Commands::GetConfig, $RequestBytes);
@@ -367,13 +427,17 @@ class Hoymiles2TIO extends IPSModuleStrict
         }
         $Result = new \Hoymiles\GetConfigReqDTO(); // rssi in -db ?
         $Result->mergeFromString($ResultStream);
-         */
+     */
 
+    /*
         $Json = $Result->serializeToJsonString();
         $this->SendDebug('TEST', $Json, 0);
         $this->SendDebug('TEST', json_decode($Json, true), 0);
+     */
+    /*
         return true;
-    }
+        }
+     */
 
     /**
      * Wird ausgeführt wenn der Kernel hochgefahren wurde.
@@ -385,13 +449,16 @@ class Hoymiles2TIO extends IPSModuleStrict
 
     protected function SetStatus(int $NewState): bool
     {
+        $this->SendDebug(__FUNCTION__, $NewState, 0);
         switch ($NewState) {
             case IS_ACTIVE:
                 $this->SetTimerInterval(\Hoymiles2T\IO\Timer::RequestState, $this->ReadPropertyInteger(\Hoymiles2T\IO\Property::RequestInterval) * 1000);
                 $this->WriteAttributeInteger(\Hoymiles2T\IO\Attribute::LastState, IS_ACTIVE);
+                $this->SendDebug(__FUNCTION__, 'LastState: ' . IS_ACTIVE, 0);
                 break;
             case IS_INACTIVE:
                 $this->WriteAttributeInteger(\Hoymiles2T\IO\Attribute::LastState, IS_INACTIVE);
+                $this->SendDebug(__FUNCTION__, 'LastState: ' . IS_INACTIVE, 0);
                 // And deactivate timer
                 // No break. Add additional comment above this line if intentional
             default:
@@ -401,29 +468,42 @@ class Hoymiles2TIO extends IPSModuleStrict
         parent::SetStatus($NewState);
         return true;
     }
+    /**
+     * Registriert eine Überwachung einer Variable.
+     *
+     * @param int $VarId IPS-ID der Variable.
+     */
+    protected function RegisterVariableWatch(int $VarId): void
+    {
+        if ($VarId < 9999) {
+            return;
+        }
+        if (IPS_VariableExists($VarId)) {
+            $this->SendDebug('RegisterVariableWatch', $VarId, 0);
+            $this->RegisterMessage($VarId, VM_DELETE);
+            $this->RegisterMessage($VarId, VM_UPDATE);
+            $this->RegisterReference($VarId);
+        }
+    }
 
     private function UpdateDayNightVariables(int $VariableId, string $Property): void
     {
         if ($VariableId < 10000) {
-            $this->UpdateFormField($Property, 'variableID', -1);
+            $this->UpdateFormField($Property, 'variableID', 1);
             $this->UpdateFormField($Property, 'visible', false);
             $this->UpdateFormField($Property, 'value', '""');
             return;
         }
         if (!IPS_VariableExists($VariableId)) {
-            $this->UpdateFormField($Property, 'variableID', -1);
+            $this->UpdateFormField($Property, 'variableID', 1);
             $this->UpdateFormField($Property, 'visible', false);
             $this->UpdateFormField($Property, 'value', '""');
             return;
         }
         switch (IPS_GetVariable($VariableId)['VariableType']) {
-            case VARIABLETYPE_BOOLEAN:
-                $this->UpdateFormField($Property, 'variableID', $VariableId);
-                $this->UpdateFormField($Property, 'visible', true);
-                break;
             case VARIABLETYPE_INTEGER:
                 if (IPS_GetVariable($VariableId)['VariableProfile'] == '~UnixTimestamp') {
-                    $this->UpdateFormField($Property, 'variableID', -1);
+                    $this->UpdateFormField($Property, 'variableID', 1);
                     $this->UpdateFormField($Property, 'visible', false);
                     $this->UpdateFormField($Property, 'value', '""');
                 } else {
@@ -432,9 +512,8 @@ class Hoymiles2TIO extends IPSModuleStrict
                 }
                 break;
             default:
-                $this->UpdateFormField($Property, 'visible', false);
-                $this->UpdateFormField($Property, 'variableID', -1);
-                $this->UpdateFormField($Property, 'value', '""');
+                $this->UpdateFormField($Property, 'variableID', $VariableId);
+                $this->UpdateFormField($Property, 'visible', true);
                 break;
         }
     }
@@ -460,11 +539,48 @@ class Hoymiles2TIO extends IPSModuleStrict
         $this->UpdateFormField('StopVariableId', 'value', IPS_GetObjectIDByIdent('Sunset', $LocationId));
     }
 
-    private function StartWithDayNightCheck()
+    private function StartWithLastStateCheck()
     {
-        //todo
-        $this->SetStatus(IS_ACTIVE);
-        //$this->RequestState();
+        $this->SendDebug(__FUNCTION__, '', 0);
+        $this->SendDebug(__FUNCTION__, 'LastState: ' . $this->ReadAttributeInteger(\Hoymiles2T\IO\Attribute::LastState), 0);
+        if ($this->ReadAttributeInteger(\Hoymiles2T\IO\Attribute::LastState) != IS_INACTIVE) {
+            $this->SetActive();
+        }
+    }
+
+    private function DayCheck(mixed $Value): bool
+    {
+        $this->SendDebug(__FUNCTION__, $Value, 0);
+
+        if ($this->DayVariableIsTimeStamp) {
+            $this->SendDebug(__FUNCTION__, 'DayVariableIsTimeStamp:' . time(), 0);
+            $Start = (int) $Value > time();
+        } else {
+            $TargetValue = json_decode($this->ReadPropertyString(\Hoymiles2T\IO\Property::DayValue));
+            $this->SendDebug(__FUNCTION__, 'TargetValue:' . $TargetValue, 0);
+            $Start = ($Value == $TargetValue);
+        }
+        if ($Start) {
+            $this->SetActive();
+        }
+        return $Start;
+    }
+
+    private function NightCheck(mixed $Value): bool
+    {
+        $this->SendDebug(__FUNCTION__, $Value, 0);
+        if ($this->NightVariableIsTimeStamp) {
+            $this->SendDebug(__FUNCTION__, 'NightVariableIsTimeStamp:' . time(), 0);
+            $Stop = (int) $Value < time();
+        } else {
+            $TargetValue = json_decode($this->ReadPropertyString(\Hoymiles2T\IO\Property::NightValue));
+            $this->SendDebug(__FUNCTION__, 'TargetValue:' . $TargetValue, 0);
+            $Stop = ($Value == $TargetValue);
+        }
+        if ($Stop) {
+            $this->SetInactive();
+        }
+        return $Stop;
     }
 
     private function RealDataResDTO(): bool
@@ -532,12 +648,11 @@ class Hoymiles2TIO extends IPSModuleStrict
 
     private function SendCommand(int $Command, string $RequestBytes): false|string
     {
+        $TriggerError = !$this->ReadPropertyBoolean(\Hoymiles2T\IO\Property::SuppressConnectionError);
         $this->SendDebug('SendCommand', pack('n', $Command), 1);
         $this->SendDebug('RequestBytes', $RequestBytes, 1);
         $CRC16 = pack('n', $this->CRC16($RequestBytes));
         $Len = strlen($RequestBytes) + 10;
-        //$this->SendDebug('CRC16', $CRC16, 1);
-        //$this->SendDebug('Len', $Len, 0);
         $this->lock(\Hoymiles2T\IO\Locks::SendSequenz);
         $Sequenz = ++$this->Sequenz;
         $this->SendDebug('SendSequenz', pack('n', $Sequenz), 1);
@@ -549,7 +664,10 @@ class Hoymiles2TIO extends IPSModuleStrict
         $fp = @stream_socket_client($DeviceAddress, $errno, $errstr, 5);
         if (!$fp) {
             $this->SendDebug('ERROR (' . $errno . ')', $errstr, 0);
-            // todo trigger_error
+            if ($TriggerError) {
+                trigger_error($this->Translate('Error on connect') . '(' . $errno . ') ' . $errstr, E_USER_NOTICE);
+                $this->SetStatus(IS_EBASE + 2);
+            }
             return false;
         } else {
             $this->SendDebug('Send', $Content, 1);
@@ -558,7 +676,10 @@ class Hoymiles2TIO extends IPSModuleStrict
                 if ($fwrite === false) {
                     $this->SendDebug('ERROR on write (' . $errno . ')', $errstr, 0);
                     @fclose($fp);
-                    // todo trigger_error
+                    if ($TriggerError) {
+                        trigger_error($this->Translate('Error on write') . '(' . $errno . ') ' . $errstr, E_USER_NOTICE);
+                        $this->SetStatus(IS_EBASE + 2);
+                    }
                     return false;
                 }
             }
@@ -567,8 +688,11 @@ class Hoymiles2TIO extends IPSModuleStrict
             fclose($fp);
         }
         if (!$Data) {
-            // todo trigger_error
             $this->SendDebug('ERROR (0)', 'Timeout', 0);
+            if ($TriggerError) {
+                trigger_error($this->Translate('Timeout'), E_USER_NOTICE);
+                $this->SetStatus(IS_EBASE + 2);
+            }
             return false;
         }
         $Header = substr($Data, 0, 10);
@@ -577,14 +701,11 @@ class Hoymiles2TIO extends IPSModuleStrict
         $this->SendDebug('Recv Payload', $Payload, 1);
         $this->SendDebug('Recv Sequenz', unpack('n', substr($Header, 4, 2))[1], 0);
         $Len = unpack('n', substr($Header, 8, 2))[1];
-        //$this->SendDebug('Recv Len', $Len, 0);
         if ($Len != strlen($Payload) + 10) {
             trigger_error($this->Translate('Data has wrong length.'), E_USER_NOTICE);
             return false;
         }
-        //$this->SendDebug('Recv CRC', substr($Header, 6, 2), 1);
         $CRC16 = pack('n', $this->CRC16($Payload));
-        //$this->SendDebug('Recv CRC', $CRC16, 1);
         if ($CRC16 != substr($Header, 6, 2)) {
             trigger_error($this->Translate('Invalid checksum.'), E_USER_NOTICE);
             return false;
@@ -643,5 +764,20 @@ class Hoymiles2TIO extends IPSModuleStrict
             }
         }
         return chr($tmp);
+    }
+    /**
+     * Desregistriert eine Überwachung einer Variable.
+     *
+     * @param int $VarId IPS-ID der Variable.
+     */
+    private function UnregisterVariableWatch(int $VarId): void
+    {
+        if ($VarId < 9999) {
+            return;
+        }
+        $this->SendDebug('UnregisterVariableWatch', $VarId, 0);
+        $this->UnregisterMessage($VarId, VM_DELETE);
+        $this->UnregisterMessage($VarId, VM_UPDATE);
+        $this->UnregisterReference($VarId);
     }
 }

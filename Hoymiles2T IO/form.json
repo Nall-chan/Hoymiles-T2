@@ -19,15 +19,26 @@
             ]
         },
         {
-            "name": "RequestInterval",
-            "type": "NumberSpinner",
-            "caption": "Request Interval",
-            "suffix": "seconds",
-            "minimum": 0,
-            "width": "200px"
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "RequestInterval",
+                    "type": "NumberSpinner",
+                    "caption": "Request Interval",
+                    "suffix": "seconds",
+                    "minimum": 0,
+                    "width": "200px"
+                },
+                {
+                    "type": "CheckBox",
+                    "name": "SuppressConnectionError",
+                    "caption": "Suppress error messages",
+                    "width": "400px"
+                }
+            ]
         },
         {
-            "visible": false,
+            "visible": true,
             "type": "SelectInstance",
             "name": "LocationId",
             "validModules": [
@@ -38,18 +49,14 @@
             "onChange": "IPS_RequestAction($id,'LocationId',$LocationId);"
         },
         {
-            "visible": false,
+            "visible": true,
             "type": "RowLayout",
-            "name": "StartNightControl",
+            "name": "StopNightControl",
             "items": [
                 {
                     "type": "SelectVariable",
-                    "validVariableTypes": [
-                        0,
-                        1
-                    ],
                     "name": "StartVariableId",
-                    "caption": "Variable for sleep ending (Timestamp or boolean)",
+                    "caption": "Variable for sleep ending",
                     "width": "300px",
                     "onChange": "IPS_RequestAction($id,'DayValue',$StartVariableId);"
                 },
@@ -62,18 +69,14 @@
             ]
         },
         {
-            "visible": false,
+            "visible": true,
             "type": "RowLayout",
-            "name": "StopNightControl",
+            "name": "StartNightControl",
             "items": [
                 {
                     "type": "SelectVariable",
-                    "validVariableTypes": [
-                        0,
-                        1
-                    ],
                     "name": "StopVariableId",
-                    "caption": "Variable for sleep start (Timestamp or boolean)",
+                    "caption": "Variable for sleep start",
                     "width": "300px",
                     "onChange": "IPS_RequestAction($id,'NightValue',$StopVariableId);"
                 },
@@ -103,11 +106,30 @@
     ],
     "actions": [
         {
-            "onClick": "HMS2T_RequestState($id);",
-            "type": "Button",
-            "caption": "Request state"
+            "type": "RowLayout",
+            "items": [
+                {
+                    "onClick": "HMS2T_RequestState($id);",
+                    "type": "Button",
+                    "caption": "Request state",
+                    "width": "200px"
+                },
+                {
+                    "onClick": "HMS2T_SetActive($id);",
+                    "type": "Button",
+                    "caption": "Activate manually",
+                    "width": "200px"
+                },
+                {
+                    "onClick": "HMS2T_SetInactive($id);",
+                    "type": "Button",
+                    "caption": "Disable manually",
+                    "width": "200px"
+                }
+            ]
         },
         {
+            "visible": false,
             "onClick": "HMS2T_Test($id);",
             "type": "Button",
             "caption": "TEST"
