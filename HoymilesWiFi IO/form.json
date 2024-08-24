@@ -109,19 +109,19 @@
             "type": "RowLayout",
             "items": [
                 {
-                    "onClick": "HMS2T_RequestState($id);",
+                    "onClick": "HMSWIFI_RequestState($id);",
                     "type": "Button",
                     "caption": "Request state",
                     "width": "200px"
                 },
                 {
-                    "onClick": "HMS2T_SetActive($id);",
+                    "onClick": "HMSWIFI_SetActive($id);",
                     "type": "Button",
                     "caption": "Activate manually",
                     "width": "200px"
                 },
                 {
-                    "onClick": "HMS2T_SetInactive($id);",
+                    "onClick": "HMSWIFI_SetInactive($id);",
                     "type": "Button",
                     "caption": "Disable manually",
                     "width": "200px"
@@ -130,7 +130,7 @@
         },
         {
             "visible": false,
-            "onClick": "HMS2T_Test($id);",
+            "onClick": "HMSWIFI_Test($id);",
             "type": "Button",
             "caption": "TEST"
         },

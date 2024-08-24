@@ -82,14 +82,14 @@ class HoymilesWiFiIO extends IPSModuleStrict
         $this->Sequenz = 0;
         $this->NbrOfInverter = 0;
         $this->NbrOfSolarPort = 0;
-        $this->DayVariableId=1;
+        $this->DayVariableId = 1;
         $this->DayVariableIsTimeStamp = false;
-        $this->NightVariableId=1;
+        $this->NightVariableId = 1;
         $this->NightVariableIsTimeStamp = false;
         $this->RegisterPropertyBoolean(\HoymilesWiFi\IO\Property::Active, false);
         $this->RegisterPropertyString(\HoymilesWiFi\IO\Property::Host, '');
         $this->RegisterPropertyInteger(\HoymilesWiFi\IO\Property::Port, 10081);
-        $this->RegisterPropertyInteger(\HoymilesWiFi\IO\Property::RequestInterval, 10);
+        $this->RegisterPropertyInteger(\HoymilesWiFi\IO\Property::RequestInterval, 60);
         $this->RegisterPropertyBoolean(\HoymilesWiFi\IO\Property::SuppressConnectionError, true);
         $this->RegisterPropertyInteger(\HoymilesWiFi\IO\Property::LocationId, 1);
         $this->RegisterPropertyInteger(\HoymilesWiFi\IO\Property::StartVariableId, 1);
@@ -112,9 +112,9 @@ class HoymilesWiFiIO extends IPSModuleStrict
         $this->Sequenz = 0;
         $this->DayVariableIsTimeStamp = false;
         $this->NightVariableIsTimeStamp = false;
-        $this->DayVariableId =1;
-        $this->NightVariableId =1;
-        parent::ApplyChanges();        
+        $this->DayVariableId = 1;
+        $this->NightVariableId = 1;
+        parent::ApplyChanges();
         $this->SetSummary($this->ReadPropertyString(\HoymilesWiFi\IO\Property::Host));
         // Wenn Kernel nicht bereit, dann warten... KR_READY kommt ja gleich
         if (IPS_GetKernelRunlevel() != KR_READY) {
@@ -130,21 +130,21 @@ class HoymilesWiFiIO extends IPSModuleStrict
             $this->NightVariableId = $this->ReadPropertyInteger(\HoymilesWiFi\IO\Property::StopVariableId);
             $this->RegisterVariableWatch($this->DayVariableId);
             $this->RegisterVariableWatch($this->NightVariableId);
-            if (($this->DayVariableId > 1) && ($this->DayVariableId > 1)){
-                $this->SendDebug(__FUNCTION__,'Day & Night are set',0);
-                if (!IPS_VariableExists($this->NightVariableId)){
-                    $this->SendDebug(__FUNCTION__,'Night INVALID',0);
-                    $this->SetStatus(IS_EBASE+1);
+            if (($this->DayVariableId > 1) && ($this->DayVariableId > 1)) {
+                $this->SendDebug(__FUNCTION__, 'Day & Night are set', 0);
+                if (!IPS_VariableExists($this->NightVariableId)) {
+                    $this->SendDebug(__FUNCTION__, 'Night INVALID', 0);
+                    $this->SetStatus(IS_EBASE + 1);
                     return;
                 }
-                if (!IPS_VariableExists($this->DayVariableId)){
-                    $this->SendDebug(__FUNCTION__,'Day INVALID',0);
-                    $this->SetStatus(IS_EBASE+1);
+                if (!IPS_VariableExists($this->DayVariableId)) {
+                    $this->SendDebug(__FUNCTION__, 'Day INVALID', 0);
+                    $this->SetStatus(IS_EBASE + 1);
                     return;
                 }
                 $this->NightVariableIsTimeStamp = (IPS_GetVariable($this->NightVariableId)['VariableProfile'] == '~UnixTimestamp');
                 $this->DayVariableIsTimeStamp = (IPS_GetVariable($this->DayVariableId)['VariableProfile'] == '~UnixTimestamp');
-                if (!$this->DayCheck(GetValue($this->DayVariableId))){
+                if (!$this->DayCheck(GetValue($this->DayVariableId))) {
                     $this->NightCheck(GetValue($this->DayVariableId));
                 }
             } else {
@@ -157,7 +157,7 @@ class HoymilesWiFiIO extends IPSModuleStrict
 
     public function SetActive(): bool
     {
-        $this->SendDebug(__FUNCTION__,'',0);
+        $this->SendDebug(__FUNCTION__, '', 0);
         if ($this->ReadPropertyString(\HoymilesWiFi\IO\Property::Host) == '') {
             return false;
         }
@@ -175,7 +175,7 @@ class HoymilesWiFiIO extends IPSModuleStrict
 
     public function SetInactive(): bool
     {
-        $this->SendDebug(__FUNCTION__,'',0);
+        $this->SendDebug(__FUNCTION__, '', 0);
         if ($this->GetStatus() != IS_ACTIVE) {
             return false;
         }
@@ -209,11 +209,11 @@ class HoymilesWiFiIO extends IPSModuleStrict
             case VM_DELETE:
                 if ($SenderID == $this->DayVariableId) {
                     $this->UnregisterVariableWatch($this->DayVariableId);
-                    $this->DayVariableId=1;
+                    $this->DayVariableId = 1;
                 }
                 if ($SenderID == $this->NightVariableId) {
                     $this->UnregisterVariableWatch($this->NightVariableId);
-                    $this->NightVariableId=1;
+                    $this->NightVariableId = 1;
                 }
                 break;
         }
@@ -449,16 +449,16 @@ class HoymilesWiFiIO extends IPSModuleStrict
 
     protected function SetStatus(int $NewState): bool
     {
-        $this->SendDebug(__FUNCTION__,$NewState,0);        
+        $this->SendDebug(__FUNCTION__, $NewState, 0);
         switch ($NewState) {
             case IS_ACTIVE:
                 $this->SetTimerInterval(\HoymilesWiFi\IO\Timer::RequestState, $this->ReadPropertyInteger(\HoymilesWiFi\IO\Property::RequestInterval) * 1000);
                 $this->WriteAttributeInteger(\HoymilesWiFi\IO\Attribute::LastState, IS_ACTIVE);
-                $this->SendDebug(__FUNCTION__,'LastState: '.IS_ACTIVE,0);
+                $this->SendDebug(__FUNCTION__, 'LastState: ' . IS_ACTIVE, 0);
                 break;
             case IS_INACTIVE:
                 $this->WriteAttributeInteger(\HoymilesWiFi\IO\Attribute::LastState, IS_INACTIVE);
-                $this->SendDebug(__FUNCTION__,'LastState: '.IS_INACTIVE,0);
+                $this->SendDebug(__FUNCTION__, 'LastState: ' . IS_INACTIVE, 0);
                 // And deactivate timer
                 // No break. Add additional comment above this line if intentional
             default:
@@ -467,6 +467,23 @@ class HoymilesWiFiIO extends IPSModuleStrict
         }
         parent::SetStatus($NewState);
         return true;
+    }
+    /**
+     * Registriert eine Überwachung einer Variable.
+     *
+     * @param int $VarId IPS-ID der Variable.
+     */
+    protected function RegisterVariableWatch(int $VarId): void
+    {
+        if ($VarId < 9999) {
+            return;
+        }
+        if (IPS_VariableExists($VarId)) {
+            $this->SendDebug('RegisterVariableWatch', $VarId, 0);
+            $this->RegisterMessage($VarId, VM_DELETE);
+            $this->RegisterMessage($VarId, VM_UPDATE);
+            $this->RegisterReference($VarId);
+        }
     }
 
     private function UpdateDayNightVariables(int $VariableId, string $Property): void
@@ -524,43 +541,43 @@ class HoymilesWiFiIO extends IPSModuleStrict
 
     private function StartWithLastStateCheck()
     {
-        $this->SendDebug(__FUNCTION__,'',0);
-        $this->SendDebug(__FUNCTION__,'LastState: '.$this->ReadAttributeInteger(\HoymilesWiFi\IO\Attribute::LastState),0);
+        $this->SendDebug(__FUNCTION__, '', 0);
+        $this->SendDebug(__FUNCTION__, 'LastState: ' . $this->ReadAttributeInteger(\HoymilesWiFi\IO\Attribute::LastState), 0);
         if ($this->ReadAttributeInteger(\HoymilesWiFi\IO\Attribute::LastState) != IS_INACTIVE) {
             $this->SetActive();
         }
     }
 
-    private function DayCheck(mixed $Value):bool
+    private function DayCheck(mixed $Value): bool
     {
-        $this->SendDebug(__FUNCTION__,$Value,0);
+        $this->SendDebug(__FUNCTION__, $Value, 0);
 
-        if ($this->DayVariableIsTimeStamp){
-            $this->SendDebug(__FUNCTION__,'DayVariableIsTimeStamp:'.time(),0);
-            $Start = (int)$Value > time();
+        if ($this->DayVariableIsTimeStamp) {
+            $this->SendDebug(__FUNCTION__, 'DayVariableIsTimeStamp:' . time(), 0);
+            $Start = (int) $Value > (time() - 2);
         } else {
             $TargetValue = json_decode($this->ReadPropertyString(\HoymilesWiFi\IO\Property::DayValue));
-            $this->SendDebug(__FUNCTION__,'TargetValue:'.$TargetValue,0);
+            $this->SendDebug(__FUNCTION__, 'TargetValue:' . $TargetValue, 0);
             $Start = ($Value == $TargetValue);
         }
-        if ($Start){
+        if ($Start) {
             $this->SetActive();
         }
         return $Start;
     }
 
-    private function NightCheck(mixed $Value):bool
+    private function NightCheck(mixed $Value): bool
     {
-        $this->SendDebug(__FUNCTION__,$Value,0);
-        if ($this->NightVariableIsTimeStamp){
-            $this->SendDebug(__FUNCTION__,'NightVariableIsTimeStamp:'.time(),0);
-            $Stop = (int)$Value < time();
+        $this->SendDebug(__FUNCTION__, $Value, 0);
+        if ($this->NightVariableIsTimeStamp) {
+            $this->SendDebug(__FUNCTION__, 'NightVariableIsTimeStamp:' . time(), 0);
+            $Stop = (int) $Value < (time() + 2);
         } else {
             $TargetValue = json_decode($this->ReadPropertyString(\HoymilesWiFi\IO\Property::NightValue));
-            $this->SendDebug(__FUNCTION__,'TargetValue:'.$TargetValue,0);
+            $this->SendDebug(__FUNCTION__, 'TargetValue:' . $TargetValue, 0);
             $Stop = ($Value == $TargetValue);
         }
-        if ($Stop){
+        if ($Stop) {
             $this->SetInactive();
         }
         return $Stop;
@@ -649,7 +666,7 @@ class HoymilesWiFiIO extends IPSModuleStrict
             $this->SendDebug('ERROR (' . $errno . ')', $errstr, 0);
             if ($TriggerError) {
                 trigger_error($this->Translate('Error on connect') . '(' . $errno . ') ' . $errstr, E_USER_NOTICE);
-                $this->SetStatus(IS_EBASE+2);
+                $this->SetStatus(IS_EBASE + 2);
             }
             return false;
         } else {
@@ -661,7 +678,7 @@ class HoymilesWiFiIO extends IPSModuleStrict
                     @fclose($fp);
                     if ($TriggerError) {
                         trigger_error($this->Translate('Error on write') . '(' . $errno . ') ' . $errstr, E_USER_NOTICE);
-                        $this->SetStatus(IS_EBASE+2);
+                        $this->SetStatus(IS_EBASE + 2);
                     }
                     return false;
                 }
@@ -674,7 +691,7 @@ class HoymilesWiFiIO extends IPSModuleStrict
             $this->SendDebug('ERROR (0)', 'Timeout', 0);
             if ($TriggerError) {
                 trigger_error($this->Translate('Timeout'), E_USER_NOTICE);
-                $this->SetStatus(IS_EBASE+2);                
+                $this->SetStatus(IS_EBASE + 2);
             }
             return false;
         }
@@ -748,24 +765,7 @@ class HoymilesWiFiIO extends IPSModuleStrict
         }
         return chr($tmp);
     }
-        /**
-     * Registriert eine Überwachung einer Variable.
-     *
-     * @param int $VarId IPS-ID der Variable.
-     */
-    protected function RegisterVariableWatch(int $VarId): void
-    {
-        if ($VarId < 9999) {
-            return;
-        }
-        if (IPS_VariableExists($VarId)) {
-            $this->SendDebug('RegisterVariableWatch', $VarId, 0);
-            $this->RegisterMessage($VarId, VM_DELETE);
-            $this->RegisterMessage($VarId, VM_UPDATE);
-            $this->RegisterReference($VarId);
-        }
-    }
-        /**
+    /**
      * Desregistriert eine Überwachung einer Variable.
      *
      * @param int $VarId IPS-ID der Variable.

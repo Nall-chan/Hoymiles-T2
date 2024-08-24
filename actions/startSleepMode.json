@@ -1,0 +1,27 @@
+{
+    "id": "{A0AA53B9-62A7-42E1-857D-9191D7721DDD}",
+    "caption": "Activate sleep mode",
+    "form": [],
+    "priority": 1,
+    "category": "target",
+    "action": [
+        "HMSWIFI_SetInactive($_IPS['TARGET']);"
+    ],
+    "restrictions": {
+        "objectType": [
+            1
+        ],
+        "includeEnvironments": [
+            "Default",
+            "TestCommands"
+        ],
+        "moduleID": [
+            "{5972AA13-358F-A088-CEBD-207C289C9395}"
+        ]
+    },
+    "locale": {
+        "de": {
+            "Activate sleep mode": "Aktiviere Schlafmodus"
+        }
+    }
+}
