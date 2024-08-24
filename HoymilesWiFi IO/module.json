@@ -1,6 +1,6 @@
 {
     "id": "{5972AA13-358F-A088-CEBD-207C289C9395}",
-    "name": "Hoymiles 2T IO",
+    "name": "Hoymiles WiFi IO",
     "type": 1,
     "vendor": "Hoymiles",
     "aliases": [],
@@ -15,5 +15,5 @@
         "{2651EA6C-47E9-BA79-7410-382895EC8244}"
     ],
     "prefix": "HMS2T",
-    "url": "https://github.com/Nall-chan/Hoymiles2T/"
+    "url": "https://github.com/Nall-chan/HoymilesWiFi/"
 }

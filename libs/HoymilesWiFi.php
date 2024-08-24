@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Hoymiles2T{
+namespace HoymilesWiFi{
     class GUID
     {
         public const IO = '{5972AA13-358F-A088-CEBD-207C289C9395}';
@@ -25,7 +25,7 @@ namespace Hoymiles2T{
     }
 }
 
-namespace Hoymiles2T\IO{
+namespace HoymilesWiFi\IO{
     class Property
     {
         public const Active = 'Open';
@@ -62,7 +62,7 @@ namespace Hoymiles2T\IO{
     }
 }
 
-namespace Hoymiles2T\Inverter{
+namespace HoymilesWiFi\Inverter{
     class Property
     {
         public const Number = 'Number';
@@ -101,7 +101,7 @@ namespace Hoymiles2T\Inverter{
     }
 }
 
-namespace Hoymiles2T\SolarPort{
+namespace HoymilesWiFi\SolarPort{
     class Property
     {
         public const Port = 'Port';
@@ -125,7 +125,7 @@ namespace Hoymiles2T\SolarPort{
     }
 }
 
-namespace Hoymiles2T\DTU{
+namespace HoymilesWiFi\DTU{
     class Variables
     {
         public const SerialNumber = 'sn';

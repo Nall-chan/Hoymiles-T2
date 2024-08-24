@@ -12,22 +12,22 @@ class LibraryTest extends TestCaseSymconValidation
     }
     public function testValidateIO(): void
     {
-        $this->validateModule(__DIR__ . '/../Hoymiles2T IO');
+        $this->validateModule(__DIR__ . '/../HoymilesWiFi IO');
     }
     public function testValidateConfigurator(): void
     {
-        $this->validateModule(__DIR__ . '/../Hoymiles2T Configurator');
+        $this->validateModule(__DIR__ . '/../HoymilesWiFi Configurator');
     }
     public function testValidateInverter(): void
     {
-        $this->validateModule(__DIR__ . '/../Hoymiles2T Inverter');
+        $this->validateModule(__DIR__ . '/../HoymilesWiFi Inverter');
     }
     public function testValidateDTU(): void
     {
-        $this->validateModule(__DIR__ . '/../Hoymiles2T DTU');
+        $this->validateModule(__DIR__ . '/../HoymilesWiFi DTU');
     }
     public function testValidateSolarPort(): void
     {
-        $this->validateModule(__DIR__ . '/../Hoymiles2T SolarPort');
+        $this->validateModule(__DIR__ . '/../HoymilesWiFi SolarPort');
     }
 }

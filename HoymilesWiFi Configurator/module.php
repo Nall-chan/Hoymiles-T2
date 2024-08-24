@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__) . '/libs/Hoymiles2T.php';  // diverse Klassen
-eval('declare(strict_types=1);namespace Hoymiles2TConfigurator {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/DebugHelper.php') . '}');
+require_once dirname(__DIR__) . '/libs/HoymilesWiFi.php';  // diverse Klassen
+eval('declare(strict_types=1);namespace HoymilesWiFiConfigurator {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/DebugHelper.php') . '}');
 
 /**
- * Hoymiles2TConfigurator
+ * HoymilesWiFiConfigurator
  *
  * @method bool SendDebug(string $Message, mixed $Data, int $Format)
  */
-class Hoymiles2TConfigurator extends IPSModuleStrict
+class HoymilesWiFiConfigurator extends IPSModuleStrict
 {
-    use \Hoymiles2TConfigurator\DebugHelper;
+    use \HoymilesWiFiConfigurator\DebugHelper;
 
     public function Create(): void
     {
         parent::Create();
-        $this->ConnectParent(\Hoymiles2T\GUID::IO);
+        $this->ConnectParent(\HoymilesWiFi\GUID::IO);
     }
 
     public function ApplyChanges(): void
@@ -41,8 +41,8 @@ class Hoymiles2TConfigurator extends IPSModuleStrict
         list($NbrOfInverter, $NbrOfSolarPort) = $this->GetDevicesFromDTU();
 
         $DTU = $this->GetDTUConfigValues();
-        $Inverters = $this->GetDevicesConfigValues('Inverter', \Hoymiles2T\GUID::Inverter, \Hoymiles2T\Inverter\Property::Number, $NbrOfInverter);
-        $SolarPorts = $this->GetDevicesConfigValues('Solar string', \Hoymiles2T\GUID::SolarPort, \Hoymiles2T\SolarPort\Property::Port, $NbrOfSolarPort);
+        $Inverters = $this->GetDevicesConfigValues('Inverter', \HoymilesWiFi\GUID::Inverter, \HoymilesWiFi\Inverter\Property::Number, $NbrOfInverter);
+        $SolarPorts = $this->GetDevicesConfigValues('Solar string', \HoymilesWiFi\GUID::SolarPort, \HoymilesWiFi\SolarPort\Property::Port, $NbrOfSolarPort);
         $Form['actions'][0]['values'] = array_merge($DTU, $Inverters, $SolarPorts);
         $this->SendDebug('FORM', json_encode($Form), 0);
         $this->SendDebug('FORM', json_last_error_msg(), 0);
@@ -55,14 +55,14 @@ class Hoymiles2TConfigurator extends IPSModuleStrict
             return [0, 0];
         }
         $ret = $this->SendDataToParent(json_encode([
-            'DataID'   => \Hoymiles2T\GUID::DeviceToIo,
+            'DataID'   => \HoymilesWiFi\GUID::DeviceToIo,
             'Function' => 'ListDevices',
         ]));
         $Devices = unserialize($ret);
         $this->SendDebug('DTU Devices', $Devices, 0);
         return [
-            $Devices[\Hoymiles2T\ConfigArray::NbrOfInverter],
-            $Devices[\Hoymiles2T\ConfigArray::NbrOfSolarPort]
+            $Devices[\HoymilesWiFi\ConfigArray::NbrOfInverter],
+            $Devices[\HoymilesWiFi\ConfigArray::NbrOfSolarPort]
         ];
     }
 
@@ -70,7 +70,7 @@ class Hoymiles2TConfigurator extends IPSModuleStrict
     {
         $FoundDevices = [];
         $IO = IPS_GetInstance($this->InstanceID)['ConnectionID'];
-        $InstanceIDList = $this->GetInstanceList(\Hoymiles2T\GUID::DTU, $IO);
+        $InstanceIDList = $this->GetInstanceList(\HoymilesWiFi\GUID::DTU, $IO);
         $this->SendDebug('DTU Instances', $InstanceIDList, 0);
         $InstanceIDDevice = (count($InstanceIDList) ? array_shift($InstanceIDList) : false);
         $Device = [
@@ -83,11 +83,11 @@ class Hoymiles2TConfigurator extends IPSModuleStrict
             $Device['Location'] = stristr(IPS_GetLocation($InstanceIDDevice), IPS_GetName($InstanceIDDevice), true);
         } else {
             $Device['instanceID'] = 0;
-            $Device['name'] = $this->Translate(IPS_GetModule(\Hoymiles2T\GUID::DTU)['ModuleName']);
+            $Device['name'] = $this->Translate(IPS_GetModule(\HoymilesWiFi\GUID::DTU)['ModuleName']);
             $Device['Location'] = '';
         }
         $Device['create'] = [
-            'moduleID'      => \Hoymiles2T\GUID::DTU,
+            'moduleID'      => \HoymilesWiFi\GUID::DTU,
             'configuration' => new stdClass()
         ];
         $FoundDevices[] = $Device;

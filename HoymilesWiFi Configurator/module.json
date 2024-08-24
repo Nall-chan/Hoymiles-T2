@@ -1,6 +1,6 @@
 {
     "id": "{4062635D-2680-4A39-C364-05EB8B196DA9}",
-    "name": "Hoymiles 2T Configurator",
+    "name": "Hoymiles WiFi Configurator",
     "type": 4,
     "vendor": "Hoymiles",
     "aliases": [],
@@ -12,5 +12,5 @@
         "{CEE3BF9B-2A23-4433-ACAB-6E22F10D743F}"
     ],
     "prefix": "HMS2T",
-    "url": "https://github.com/Nall-chan/Hoymiles2T/"
+    "url": "https://github.com/Nall-chan/HoymilesWiFi/"
 }

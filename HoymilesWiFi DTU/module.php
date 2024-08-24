@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__) . '/libs/Hoymiles2T.php';  // diverse Klassen
-eval('declare(strict_types=1);namespace Hoymiles2TDTU {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/VariableHelper.php') . '}');
+require_once dirname(__DIR__) . '/libs/HoymilesWiFi.php';  // diverse Klassen
+eval('declare(strict_types=1);namespace HoymilesWiFiDTU {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/VariableHelper.php') . '}');
 
 /**
  * @method void SetValueInteger(string $Ident, int $value)
  * @method void SetValueFloat(string $Ident, float $value)
  */
-class Hoymiles2TDTU extends IPSModuleStrict
+class HoymilesWiFiDTU extends IPSModuleStrict
 {
-    use \Hoymiles2TDTU\VariableHelper;
+    use \HoymilesWiFiDTU\VariableHelper;
 
     public function Create(): void
     {
         //Never delete this line!
         parent::Create();
-        $this->ConnectParent(\Hoymiles2T\GUID::IO);
+        $this->ConnectParent(\HoymilesWiFi\GUID::IO);
     }
 
     public function ApplyChanges(): void
@@ -37,13 +37,13 @@ class Hoymiles2TDTU extends IPSModuleStrict
     private function DecodeData(array $DataValues): void
     {
         foreach ($DataValues as $Key => $Value) {
-            if ($Key == \Hoymiles2T\DTU\Variables::SerialNumber) {
+            if ($Key == \HoymilesWiFi\DTU\Variables::SerialNumber) {
                 $this->SetSummary($Value);
             }
-            if (!array_key_exists($Key, \Hoymiles2T\DTU\Variables::$Vars)) {
+            if (!array_key_exists($Key, \HoymilesWiFi\DTU\Variables::$Vars)) {
                 continue;
             }
-            $Var = \Hoymiles2T\DTU\Variables::$Vars[$Key];
+            $Var = \HoymilesWiFi\DTU\Variables::$Vars[$Key];
             if (!$this->FindIDForIdent($Key)) {
                 $this->MaintainVariable($Key, $this->Translate($Var[0]), $Var[1], $Var[2], 0, true);
             }

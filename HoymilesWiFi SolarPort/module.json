@@ -1,6 +1,6 @@
 {
     "id": "{65B18475-D1B7-825C-5958-5300C1100845}",
-    "name": "Hoymiles 2T SolarPort",
+    "name": "Hoymiles WiFi SolarPort",
     "type": 3,
     "vendor": "Hoymiles",
     "aliases": [],
@@ -12,5 +12,5 @@
         "{85CA6AAE-6EE0-BE1F-FA4D-F0A3B569E3F7}"
     ],
     "prefix": "HMS2T",
-    "url": "https://github.com/Nall-chan/Hoymiles2T/"
+    "url": "https://github.com/Nall-chan/HoymilesWiFi/"
 }
