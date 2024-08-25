@@ -144,8 +144,12 @@ class HoymilesWiFiIO extends IPSModuleStrict
                 }
                 $this->NightVariableIsTimeStamp = (IPS_GetVariable($this->NightVariableId)['VariableProfile'] == '~UnixTimestamp');
                 $this->DayVariableIsTimeStamp = (IPS_GetVariable($this->DayVariableId)['VariableProfile'] == '~UnixTimestamp');
-                if (!$this->DayCheck(GetValue($this->DayVariableId))) {
-                    $this->NightCheck(GetValue($this->NightVariableId));
+                if ($this->DayVariableIsTimeStamp) {
+                    $this->DayNightCheck(GetValue($this->DayVariableId), GetValue($this->NightVariableId));
+                } else {
+                    if (!$this->DayCheck(GetValue($this->DayVariableId))) {
+                        $this->StartWithLastStateCheck();
+                    }
                 }
             } else {
                 $this->StartWithLastStateCheck();
@@ -200,10 +204,18 @@ class HoymilesWiFiIO extends IPSModuleStrict
                 break;
             case VM_UPDATE:
                 if ($SenderID == $this->DayVariableId) {
-                    $this->DayCheck($Data[2]);
+                    if ($this->DayVariableIsTimeStamp) {
+                        $this->DayNightCheck($Data[0], GetValue($this->NightVariableId));
+                    } else {
+                        $this->DayCheck($Data[0]);
+                    }
                 }
                 if ($SenderID == $this->NightVariableId) {
-                    $this->NightCheck($Data[2]);
+                    if ($this->NightVariableIsTimeStamp) {
+                        $this->DayNightCheck(GetValue($this->DayVariableId), $Data[0]);
+                    } else {
+                        $this->NightCheck($Data[0]);
+                    }
                 }
                 break;
             case VM_DELETE:
@@ -259,7 +271,6 @@ class HoymilesWiFiIO extends IPSModuleStrict
         }
         if ($StartVariableId) {
             $Form['elements'][3]['items'][1]['variableID'] = $StartVariableId;
-            //$Form['elements'][3]['items'][1]['value'] = json_decode($this->ReadPropertyString(\HoymilesWiFi\IO\Property::DayValue), true);
         } else {
             $Form['elements'][3]['items'][1]['variableID'] = 1;
             $Form['elements'][3]['items'][1]['value'] = '""';
@@ -282,7 +293,6 @@ class HoymilesWiFiIO extends IPSModuleStrict
 
         if ($StopVariableId) {
             $Form['elements'][4]['items'][1]['variableID'] = $StopVariableId;
-            //$Form['elements'][4]['items'][1]['value'] = json_decode($this->ReadPropertyString(\HoymilesWiFi\IO\Property::NightValue), true);
         } else {
             $Form['elements'][4]['items'][1]['variableID'] = 1;
             $Form['elements'][4]['items'][1]['value'] = '""';
@@ -548,39 +558,43 @@ class HoymilesWiFiIO extends IPSModuleStrict
         }
     }
 
+    private function DayNightCheck(mixed $ValueDay, mixed $ValueNight): void
+    {
+        $this->SendDebug(__FUNCTION__, '', 0);
+        $this->SendDebug('ValueDay', $ValueDay, 0);
+        $this->SendDebug('ValueNight', $ValueNight, 0);
+        $this->SendDebug(__FUNCTION__, 'actual Timestamp:' . time(), 0);
+        if ((int) $ValueDay > (time() - 2)) {
+            $this->SendDebug('ValueDay is greater', '', 0);
+            if ((time() - 2) < (int) $ValueNight) { // Und ValueNight nicht vorbei
+                $this->SendDebug('ValueNight is greater', '', 0);
+                $this->SetActive();
+                return;
+            }
+
+        }
+        $this->SetInactive();
+    }
+
     private function DayCheck(mixed $Value): bool
     {
         $this->SendDebug(__FUNCTION__, $Value, 0);
-
-        if ($this->DayVariableIsTimeStamp) {
-            $this->SendDebug(__FUNCTION__, 'DayVariableIsTimeStamp:' . time(), 0);
-            $Start = (int) $Value < (time() - 2);
-        } else {
-            $TargetValue = json_decode($this->ReadPropertyString(\HoymilesWiFi\IO\Property::DayValue));
-            $this->SendDebug(__FUNCTION__, 'TargetValue:' . $TargetValue, 0);
-            $Start = ($Value == $TargetValue);
+        $TargetValue = json_decode($this->ReadPropertyString(\HoymilesWiFi\IO\Property::NightValue));
+        $this->SendDebug(__FUNCTION__, 'TargetValue:' . $TargetValue, 0);
+        if ($Value == $TargetValue) {
+            $this->SetInactive();
+            return true;
         }
-        if ($Start) {
-            $this->SetActive();
-        }
-        return $Start;
+        return false;
     }
-
-    private function NightCheck(mixed $Value): bool
+    private function NightCheck(mixed $Value): void
     {
         $this->SendDebug(__FUNCTION__, $Value, 0);
-        if ($this->NightVariableIsTimeStamp) {
-            $this->SendDebug(__FUNCTION__, 'NightVariableIsTimeStamp:' . time(), 0);
-            $Stop = (int) $Value > (time() - 2);
-        } else {
-            $TargetValue = json_decode($this->ReadPropertyString(\HoymilesWiFi\IO\Property::NightValue));
-            $this->SendDebug(__FUNCTION__, 'TargetValue:' . $TargetValue, 0);
-            $Stop = ($Value == $TargetValue);
-        }
-        if ($Stop) {
+        $TargetValue = json_decode($this->ReadPropertyString(\HoymilesWiFi\IO\Property::NightValue));
+        $this->SendDebug(__FUNCTION__, 'TargetValue:' . $TargetValue, 0);
+        if ($Value == $TargetValue) {
             $this->SetInactive();
         }
-        return $Stop;
     }
 
     private function RealDataResDTO(): bool

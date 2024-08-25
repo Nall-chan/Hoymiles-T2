@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__) . '/libs/HoymilesWiFi.php';  // diverse Klassen
+require_once dirname(__DIR__) . '/libs/HoymilesWiFi.php';
 eval('declare(strict_types=1);namespace HoymilesWiFiConfigurator {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/DebugHelper.php') . '}');
 
 /**
@@ -35,7 +35,6 @@ class HoymilesWiFiConfigurator extends IPSModuleStrict
         if (!$this->HasActiveParent() || (@IPS_GetInstance($this->InstanceID)['ConnectionID'] < 10000)) {
             $Form['actions'][1]['visible'] = true;
             $Form['actions'][1]['popup']['items'][0]['caption'] = 'Instance has no active parent.';
-            //$Form['actions'][1]['items'][0]['visible'] = false;
         }
 
         list($NbrOfInverter, $NbrOfSolarPort) = $this->GetDevicesFromDTU();
@@ -149,7 +148,6 @@ class HoymilesWiFiConfigurator extends IPSModuleStrict
     {
         $InstanceIDList = [];
         foreach (IPS_GetInstanceListByModuleID($GUID) as $InstanceID) {
-            // Fremde Geräte überspringen
             if (IPS_GetInstance($InstanceID)['ConnectionID'] == $Parent) {
                 $InstanceIDList[] = $InstanceID;
             }

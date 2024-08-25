@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__) . '/libs/HoymilesWiFi.php';  // diverse Klassen
+require_once dirname(__DIR__) . '/libs/HoymilesWiFi.php';
 eval('declare(strict_types=1);namespace HoymilesWiFiSolarPort {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/VariableHelper.php') . '}');
 
 /**

@@ -43,7 +43,7 @@ Konfigurator zum Anlegen von Geräte-Instanzen in Symcon.
 
 __Konfigurationsseite__:
 
-![Instanzen](../imgs/conf.png) 
+![Config](imgs/config.png) 
 
 ## 5. Statusvariablen und Profile
 
