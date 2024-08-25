@@ -145,7 +145,7 @@ class HoymilesWiFiIO extends IPSModuleStrict
                 $this->NightVariableIsTimeStamp = (IPS_GetVariable($this->NightVariableId)['VariableProfile'] == '~UnixTimestamp');
                 $this->DayVariableIsTimeStamp = (IPS_GetVariable($this->DayVariableId)['VariableProfile'] == '~UnixTimestamp');
                 if (!$this->DayCheck(GetValue($this->DayVariableId))) {
-                    $this->NightCheck(GetValue($this->DayVariableId));
+                    $this->NightCheck(GetValue($this->NightVariableId));
                 }
             } else {
                 $this->StartWithLastStateCheck();
@@ -200,10 +200,10 @@ class HoymilesWiFiIO extends IPSModuleStrict
                 break;
             case VM_UPDATE:
                 if ($SenderID == $this->DayVariableId) {
-                    $this->DayCheck($Data[0]);
+                    $this->DayCheck($Data[2]);
                 }
                 if ($SenderID == $this->NightVariableId) {
-                    $this->NightCheck($Data[0]);
+                    $this->NightCheck($Data[2]);
                 }
                 break;
             case VM_DELETE:
@@ -554,7 +554,7 @@ class HoymilesWiFiIO extends IPSModuleStrict
 
         if ($this->DayVariableIsTimeStamp) {
             $this->SendDebug(__FUNCTION__, 'DayVariableIsTimeStamp:' . time(), 0);
-            $Start = (int) $Value > (time() - 2);
+            $Start = (int) $Value < (time() - 2);
         } else {
             $TargetValue = json_decode($this->ReadPropertyString(\HoymilesWiFi\IO\Property::DayValue));
             $this->SendDebug(__FUNCTION__, 'TargetValue:' . $TargetValue, 0);
@@ -571,7 +571,7 @@ class HoymilesWiFiIO extends IPSModuleStrict
         $this->SendDebug(__FUNCTION__, $Value, 0);
         if ($this->NightVariableIsTimeStamp) {
             $this->SendDebug(__FUNCTION__, 'NightVariableIsTimeStamp:' . time(), 0);
-            $Stop = (int) $Value < (time() + 2);
+            $Stop = (int) $Value > (time() - 2);
         } else {
             $TargetValue = json_decode($this->ReadPropertyString(\HoymilesWiFi\IO\Property::NightValue));
             $this->SendDebug(__FUNCTION__, 'TargetValue:' . $TargetValue, 0);

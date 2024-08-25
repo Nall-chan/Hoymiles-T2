@@ -29,7 +29,8 @@ Regelt die Kommunikation mit einem Hoymiles WiFi Wechselrichter.
 
 ## 2. Voraussetzungen
 
-- IP-Symcon ab Version 7.0
+ * Symcon ab Version 7.0  
+ * Hoymiles Wechselrichter mit WiFi (integrierte DTU)
 
 ## 3. Software-Installation
 
