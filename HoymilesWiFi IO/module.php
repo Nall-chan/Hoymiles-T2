@@ -169,7 +169,7 @@ class HoymilesWiFiIO extends IPSModuleStrict
             return false;
         }
 
-        if ($this->GetStatus() > IS_SBASE) {
+        if ($this->GetStatus() > IS_EBASE) {
             return false;
         }
         $this->SetStatus(IS_ACTIVE);
