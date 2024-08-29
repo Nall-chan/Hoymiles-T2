@@ -169,7 +169,7 @@ class HoymilesWiFiIO extends IPSModuleStrict
             return false;
         }
 
-        if ($this->GetStatus() == IS_ACTIVE) {
+        if ($this->GetStatus() > IS_SBASE) {
             return false;
         }
         $this->SetStatus(IS_ACTIVE);
@@ -180,7 +180,7 @@ class HoymilesWiFiIO extends IPSModuleStrict
     public function SetInactive(): bool
     {
         $this->SendDebug(__FUNCTION__, '', 0);
-        if ($this->GetStatus() != IS_ACTIVE) {
+        if ($this->GetStatus() > IS_EBASE) {
             return false;
         }
         $this->SetStatus(IS_INACTIVE);
@@ -551,7 +551,6 @@ class HoymilesWiFiIO extends IPSModuleStrict
 
     private function StartWithLastStateCheck()
     {
-        $this->SendDebug(__FUNCTION__, '', 0);
         $this->SendDebug(__FUNCTION__, 'LastState: ' . $this->ReadAttributeInteger(\HoymilesWiFi\IO\Attribute::LastState), 0);
         if ($this->ReadAttributeInteger(\HoymilesWiFi\IO\Attribute::LastState) != IS_INACTIVE) {
             $this->SetActive();
@@ -579,10 +578,10 @@ class HoymilesWiFiIO extends IPSModuleStrict
     private function DayCheck(mixed $Value): bool
     {
         $this->SendDebug(__FUNCTION__, $Value, 0);
-        $TargetValue = json_decode($this->ReadPropertyString(\HoymilesWiFi\IO\Property::NightValue));
+        $TargetValue = json_decode($this->ReadPropertyString(\HoymilesWiFi\IO\Property::DayValue));
         $this->SendDebug(__FUNCTION__, 'TargetValue:' . $TargetValue, 0);
         if ($Value == $TargetValue) {
-            $this->SetInactive();
+            $this->SetActive();
             return true;
         }
         return false;
