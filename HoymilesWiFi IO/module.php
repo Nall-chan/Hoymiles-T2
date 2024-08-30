@@ -161,28 +161,20 @@ class HoymilesWiFiIO extends IPSModuleStrict
 
     public function SetActive(): bool
     {
-        $this->SendDebug(__FUNCTION__, '', 0);
         if ($this->ReadPropertyString(\HoymilesWiFi\IO\Property::Host) == '') {
             return false;
         }
         if (!$this->ReadPropertyBoolean(\HoymilesWiFi\IO\Property::Active)) {
             return false;
         }
-
-        if ($this->GetStatus() > IS_EBASE) {
-            return false;
+        if ($this->RealDataResDTO()) {
+            $this->SetStatus(IS_ACTIVE);
         }
-        $this->SetStatus(IS_ACTIVE);
-        $this->RequestState();
         return true;
     }
 
     public function SetInactive(): bool
     {
-        $this->SendDebug(__FUNCTION__, '', 0);
-        if ($this->GetStatus() > IS_EBASE) {
-            return false;
-        }
         $this->SetStatus(IS_INACTIVE);
         return true;
     }
