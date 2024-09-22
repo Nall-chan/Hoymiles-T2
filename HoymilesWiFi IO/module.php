@@ -557,12 +557,11 @@ class HoymilesWiFiIO extends IPSModuleStrict
         $this->SendDebug(__FUNCTION__, 'actual Timestamp:' . time(), 0);
         if ((int) $ValueDay > (time() - 2)) {
             $this->SendDebug('ValueDay is greater', '', 0);
-            if ((time() - 2) < (int) $ValueNight) { // Und ValueNight nicht vorbei
-                $this->SendDebug('ValueNight is greater', '', 0);
+            if ((int) $ValueDay > (int) $ValueNight) { // Und ValueNight liegt vor (nächsten) Tag
+                $this->SendDebug('ValueNight is smaller then ValueDay', '', 0);
                 $this->SetActive();
                 return;
             }
-
         }
         $this->SetInactive();
     }
